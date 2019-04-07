@@ -4,9 +4,9 @@ jobs:
     docker:
       # specify the version
       - image: circleci/golang:1.12
-    working_directory: /code/src/github.com/kontrio/kappy
+    working_directory: /go/src/github.com/kontrio/kappy
     steps:
       - checkout
 
       # specify any bash command here prefixed with `run: `
-      - run: go build .
+      - run: go build -mod vendor .
