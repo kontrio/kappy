@@ -7,9 +7,9 @@ import (
 	"github.com/apex/log"
 	"github.com/ericchiang/k8s"
 	"github.com/joho/godotenv"
-	"github.com/kontr/kappy/pkg"
-	"github.com/kontr/kappy/pkg/kubernetes"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg"
+	"github.com/kontrio/kappy/pkg/kubernetes"
+	"github.com/kontrio/kappy/pkg/model"
 	"github.com/spf13/cobra"
 )
 

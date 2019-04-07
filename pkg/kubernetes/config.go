@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/ericchiang/k8s"
-	"github.com/kontr/kappy/pkg/awsutil"
-	"github.com/kontr/kappy/pkg/minikube"
+	"github.com/kontrio/kappy/pkg/awsutil"
+	"github.com/kontrio/kappy/pkg/minikube"
 )
 
 func GetConfig(clusterName string) (*k8s.Config, error) {

@@ -9,7 +9,7 @@ import (
 	"github.com/ericchiang/k8s/apis/extensions/v1beta1"
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 	"github.com/ericchiang/k8s/util/intstr"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg/model"
 )
 
 func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace string) v1beta1.Ingress {

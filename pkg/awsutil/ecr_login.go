@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/kontr/kappy/pkg/docker"
+	"github.com/kontrio/kappy/pkg/docker"
 	"os"
 	"strings"
 	"time"

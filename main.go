@@ -1,6 +1,6 @@
 package main
 
-import "github.com/kontr/kappy/cmd"
+import "github.com/kontrio/kappy/cmd"
 
 func main() {
 	cmd.Init()

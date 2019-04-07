@@ -8,7 +8,7 @@ import (
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 	"github.com/ericchiang/k8s/util/intstr"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg/model"
 )
 
 func createService(serviceDefinition *model.ServiceDefinition, namespace string) corev1.Service {

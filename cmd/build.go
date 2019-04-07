@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"github.com/apex/log"
-	"github.com/kontr/kappy/pkg"
-	"github.com/kontr/kappy/pkg/awsutil"
-	"github.com/kontr/kappy/pkg/docker"
-	"github.com/kontr/kappy/pkg/git"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg"
+	"github.com/kontrio/kappy/pkg/awsutil"
+	"github.com/kontrio/kappy/pkg/docker"
+	"github.com/kontrio/kappy/pkg/git"
+	"github.com/kontrio/kappy/pkg/model"
 	"github.com/spf13/cobra"
 )
 

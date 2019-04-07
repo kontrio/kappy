@@ -11,7 +11,7 @@ import (
 	appsv1 "github.com/ericchiang/k8s/apis/apps/v1"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg/model"
 )
 
 var _true bool = true

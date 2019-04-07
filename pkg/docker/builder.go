@@ -2,7 +2,7 @@ package docker
 
 import (
 	"github.com/apex/log"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg/model"
 )
 
 func RunBuild(definition *model.BuildDefinition, extraTags []string) error {

@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"github.com/apex/log"
-	"github.com/kontr/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg/model"
 	viper "github.com/spf13/viper"
 )
 

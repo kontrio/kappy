@@ -6,8 +6,8 @@ import (
 	"os/exec"
 
 	"github.com/apex/log"
-	"github.com/kontr/kappy/pkg"
-	"github.com/kontr/kappy/pkg/kubernetes"
+	"github.com/kontrio/kappy/pkg"
+	"github.com/kontrio/kappy/pkg/kubernetes"
 	"github.com/kr/pty"
 	"github.com/spf13/cobra"
 )

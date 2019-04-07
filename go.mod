@@ -1,4 +1,4 @@
-module github.com/kontr/kappy
+module github.com/kontrio/kappy
 
 go 1.12
 

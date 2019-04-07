@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/kontr/kappy/pkg"
+	"github.com/kontrio/kappy/pkg"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
