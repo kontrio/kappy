@@ -45,13 +45,12 @@ func CreateUpdateService(client *k8s.Client, serviceDefinition *model.ServiceDef
 	if err != nil {
 		if apiErr, ok := err.(*k8s.APIError); ok {
 			if apiErr.Code == http.StatusConflict {
-				err = client.Update(context.Background(), &resource)
-				if err != nil {
-					return err
-				}
+				return nil
+			} else {
+				return err
 			}
 		}
-		return err
 	}
+
 	return nil
 }
