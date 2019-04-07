@@ -2,9 +2,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      # specify the version
       - image: circleci/golang:1.12
-    working_directory: /go/src/github.com/kontrio/kappy
     steps:
       - checkout
 
