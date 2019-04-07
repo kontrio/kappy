@@ -1,18 +1,25 @@
 package awsutil
 
 import (
-	"os/exec"
-	"strings"
-
 	"github.com/apex/log"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eks"
+	awstoken "github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token"
 )
 
 func GetIamAuthToken(clusterName string) (string, error) {
-	output, err := exec.Command("k8s-aws-authenticator", "token", "--cluster-id", clusterName, "--token-only").Output()
-	return strings.TrimSpace(string(output)), err
+	generator, err := awstoken.NewGenerator()
+	if err != nil {
+		return "", err
+	}
+
+	token, errGetToken := generator.Get(clusterName)
+	if errGetToken != nil {
+		return "", errGetToken
+	}
+
+	return token, nil
 }
 
 func GetClusterInfo(name string) (*eks.Cluster, error) {
