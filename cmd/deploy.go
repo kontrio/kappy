@@ -100,6 +100,11 @@ var deployCmd = &cobra.Command{
 				os.Exit(1)
 				return
 			}
+
+			err = kubernetes.WatchDeploymentRollout(client, serviceName, namespace)
+			if err != nil {
+				log.Infof("Failed to watch.. %s", err)
+			}
 		}
 	},
 }
