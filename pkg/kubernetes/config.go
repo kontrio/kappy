@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ericchiang/k8s"
 	"github.com/kontrio/kappy/pkg/awsutil"
-	"github.com/kontrio/kappy/pkg/minikube"
+	"k8s.io/client-go/kubernetes"
+	k8s "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func GetConfig(clusterName string) (*k8s.Config, error) {
@@ -24,19 +24,17 @@ func GetConfig(clusterName string) (*k8s.Config, error) {
 	switch clusterType {
 	case "eks":
 		return awsutil.GetKubeConfig(name)
-	case "minikube":
-		return minikube.GetKubeConfig(name)
 	}
 
 	return nil, errors.New(fmt.Sprintf("Unknown cluster type: %s (%s)", clusterType, clusterName))
 }
 
-func CreateClient(clusterName string) (*k8s.Client, error) {
+func CreateClient(clusterName string) (*kubernetes.ClientSet, error) {
 	config, errConfig := GetConfig(clusterName)
 
 	if errConfig != nil {
 		return nil, errConfig
 	}
 
-	return k8s.NewClient(config)
+	return kubernetes.NewForConfig(config)
 }

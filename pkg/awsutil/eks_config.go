@@ -3,7 +3,7 @@ package awsutil
 import (
 	"encoding/base64"
 	"github.com/apex/log"
-	"github.com/ericchiang/k8s"
+	k8s "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func GetKubeConfig(clusterName string) (*k8s.Config, error) {
@@ -21,11 +21,8 @@ func GetKubeConfig(clusterName string) (*k8s.Config, error) {
 		return nil, errAuth
 	}
 
-	authInfo := k8s.NamedAuthInfo{
-		Name: "iam-aws-auth",
-		AuthInfo: k8s.AuthInfo{
-			Token: authToken,
-		},
+	authInfo := k8s.AuthInfo{
+		Token: authToken,
 	}
 
 	certificateAuthorityData, errEncoding := base64.StdEncoding.DecodeString(*eksCluster.CertificateAuthority.Data)
@@ -34,29 +31,32 @@ func GetKubeConfig(clusterName string) (*k8s.Config, error) {
 		return nil, errEncoding
 	}
 
-	cluster := k8s.NamedCluster{
-		Name: clusterName,
-		Cluster: k8s.Cluster{
-			Server:                   *eksCluster.Endpoint,
-			InsecureSkipTLSVerify:    false,
-			CertificateAuthorityData: certificateAuthorityData,
-		},
+	cluster := k8s.Cluster{
+		Server:                   eksCluster.Endpoint,
+		InsecureSkipTLSVerify:    false,
+		CertificateAuthorityData: certificateAuthorityData,
 	}
 
 	log.Debugf("Using cluster: %s", cluster.Cluster.Server)
 
-	context := k8s.NamedContext{
-		Name: "main",
-		Context: k8s.Context{
-			Cluster:  clusterName,
-			AuthInfo: "iam-aws-auth",
-		},
+	context := k8s.Context{
+		Cluster:  clusterName,
+		AuthInfo: "iam-aws-auth",
+	}
+
+	clusters := make(map[string]string)
+	clusters[clusterName] = &cluster
+	
+	contexts := map[string]string{
+		"main": &context
 	}
 
 	return &k8s.Config{
-		Clusters:       []k8s.NamedCluster{cluster},
-		AuthInfos:      []k8s.NamedAuthInfo{authInfo},
-		Contexts:       []k8s.NamedContext{context},
+		Clusters:       clusters,
+		AuthInfos:      map[string]string{
+			"iam-aws-auth": &authInfo,
+		},
+		Contexts:       contexts,
 		CurrentContext: "main",
 	}, nil
 }
