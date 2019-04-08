@@ -9,7 +9,6 @@ require (
 	github.com/ericchiang/k8s v1.2.0
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
-	github.com/google/uuid v1.1.1
 	github.com/heptio/authenticator v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/joho/godotenv v1.3.0

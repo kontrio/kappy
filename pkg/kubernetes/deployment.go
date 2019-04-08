@@ -99,8 +99,11 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 		},
 		Template: &corev1.PodTemplateSpec{
 			Metadata: &metav1.ObjectMeta{
+				Name:      &serviceDef.Name,
+				Namespace: &namespace,
 				Labels: map[string]string{
-					"name": serviceDef.Name,
+					"name":          serviceDef.Name,
+					"kappy.managed": serviceDef.Name,
 				},
 			},
 			Spec: &corev1.PodSpec{
@@ -114,7 +117,8 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 			Name:      &serviceDef.Name,
 			Namespace: &namespace,
 			Labels: map[string]string{
-				"name": serviceDef.Name,
+				"name":          serviceDef.Name,
+				"kappy.managed": serviceDef.Name,
 			},
 		},
 		Spec: &deploymentSpec,

@@ -14,7 +14,6 @@ import (
 func createService(serviceDefinition *model.ServiceDefinition, namespace string) corev1.Service {
 	serviceSelector := make(map[string]string)
 	serviceSelector["name"] = serviceDefinition.Name
-	serviceSelector["namespace"] = namespace
 
 	//TODO: hardcoded
 	var port int32 = 80

@@ -48,6 +48,10 @@ func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace st
 				"certmanager.k8s.io/cluster-issuer":                   "cert-issuer",
 				"traefik.ingress.kubernetes.io/frontend-entry-points": "https",
 			},
+			Labels: map[string]string{
+				"name":          serviceName,
+				"kappy.managed": serviceName,
+			},
 		},
 		Spec: &v1beta1.IngressSpec{
 			Rules: rules,

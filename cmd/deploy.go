@@ -131,7 +131,9 @@ func configureSecrets(client *k8s.Client, serviceName, namespace string, contain
 		envVars = mergeMap(envVars, loadedEnvVars)
 	}
 
-	return kubernetes.CreateSecret(client, secretReference, namespace, envVars)
+	return kubernetes.CreateSecret(client, secretReference, namespace, envVars, map[string]string{
+		"kappy.managed": serviceName,
+	})
 }
 
 func initDeployCmd() {
