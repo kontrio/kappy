@@ -4,30 +4,36 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ericchiang/k8s"
-	corev1 "github.com/ericchiang/k8s/apis/core/v1"
-	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
+	"github.com/apex/log"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-func CreateNamespace(client *k8s.Client, namespace string) error {
+func CreateNamespace(client *kubernetes.ClientSet, namespace string) error {
 	namespaceResource := corev1.Namespace{
-		Metadata: &metav1.ObjectMeta{
-			Name: &namespace,
+		ObjectMeta: &metav1.ObjectMeta{
+			Name: namespace,
 		},
-		Spec: &corev1.NamespaceSpec{},
+		Spec: corev1.NamespaceSpec{},
 	}
 
-	err := client.Create(context.Background(), &namespaceResource)
+	upsertCommand := UpsertCommand{
+		Create: func() (err error) {
+			_, err = client.CoreV1().Namespaces().Create(&namespaceResource)
 
-	if err != nil {
-		if apiErr, ok := err.(*k8s.APIError); ok {
-			if apiErr.Code == http.StatusConflict {
-				return nil
-			} else {
-				return err
+			if err == nil {
+				log.Infof("Successfully created namespace %s in namespace %s", namespace)
 			}
-		}
+		},
+		Update: func() (err error) {
+			_, err = client.CoreV1().Namespaces().Update(&namespaceResource)
+
+			if err == nil {
+				log.Infof("Successfully updated namespace %s in namespace %s", namespace)
+			}
+		},
 	}
 
-	return nil
+	return upsertCommand.Do()
 }
