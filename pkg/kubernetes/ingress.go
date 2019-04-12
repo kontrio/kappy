@@ -1,37 +1,34 @@
 package kubernetes
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 
-	"github.com/ericchiang/k8s"
-	"github.com/ericchiang/k8s/apis/extensions/v1beta1"
-	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
-	"github.com/ericchiang/k8s/util/intstr"
+	"github.com/apex/log"
 	"github.com/kontrio/kappy/pkg/model"
+	netv1beta1 "k8s.io/api/extensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
 )
 
-func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace string) v1beta1.Ingress {
+func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace string) netv1beta1.Ingress {
 
-	rules := []*v1beta1.IngressRule{}
+	rules := []netv1beta1.IngressRule{}
 	defaultPath := "/"
-	var defaultPort int32 = 80
+	defaultPort := 80
 	certSecretName := fmt.Sprintf("%s-cert", serviceName)
 
 	for _, ingress := range serviceConfig.Ingress {
-		rules = append(rules, &v1beta1.IngressRule{
-			Host: &ingress,
-			IngressRuleValue: &v1beta1.IngressRuleValue{
-				Http: &v1beta1.HTTPIngressRuleValue{
-					Paths: []*v1beta1.HTTPIngressPath{
-						&v1beta1.HTTPIngressPath{
-							Path: &defaultPath,
-							Backend: &v1beta1.IngressBackend{
-								ServiceName: &serviceName,
-								ServicePort: &intstr.IntOrString{
-									IntVal: &defaultPort,
-								},
+		rules = append(rules, netv1beta1.IngressRule{
+			Host: ingress,
+			IngressRuleValue: netv1beta1.IngressRuleValue{
+				HTTP: &netv1beta1.HTTPIngressRuleValue{
+					Paths: []netv1beta1.HTTPIngressPath{
+						netv1beta1.HTTPIngressPath{
+							Path: defaultPath,
+							Backend: netv1beta1.IngressBackend{
+								ServiceName: serviceName,
+								ServicePort: intstr.FromInt(defaultPort),
 							},
 						},
 					},
@@ -40,10 +37,13 @@ func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace st
 		})
 	}
 
-	return v1beta1.Ingress{
-		Metadata: &metav1.ObjectMeta{
-			Name:      &serviceName,
-			Namespace: &namespace,
+	return netv1beta1.Ingress{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Ingress",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceName,
+			Namespace: namespace,
 			Annotations: map[string]string{
 				"certmanager.k8s.io/cluster-issuer":                   "cert-issuer",
 				"traefik.ingress.kubernetes.io/frontend-entry-points": "https",
@@ -53,31 +53,39 @@ func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace st
 				"kappy.managed": serviceName,
 			},
 		},
-		Spec: &v1beta1.IngressSpec{
+		Spec: netv1beta1.IngressSpec{
 			Rules: rules,
-			Tls: []*v1beta1.IngressTLS{
-				&v1beta1.IngressTLS{
+			TLS: []netv1beta1.IngressTLS{
+				netv1beta1.IngressTLS{
 					Hosts:      serviceConfig.Ingress,
-					SecretName: &certSecretName,
+					SecretName: certSecretName,
 				},
 			},
 		},
 	}
 }
 
-func CreateUpdateIngress(client *k8s.Client, serviceConfig *model.ServiceConfig, serviceName, namespace string) error {
+func CreateUpdateIngress(client *kubernetes.Clientset, serviceConfig *model.ServiceConfig, serviceName, namespace string) error {
 	resource := createIngress(serviceConfig, serviceName, namespace)
-	err := client.Create(context.Background(), &resource)
-	if err != nil {
-		if apiErr, ok := err.(*k8s.APIError); ok {
-			if apiErr.Code == http.StatusConflict {
-				err = client.Update(context.Background(), &resource)
-				if err != nil {
-					return err
-				}
+
+	upsertCommand := UpsertCommand{
+		Create: func() (err error) {
+			_, err = client.ExtensionsV1beta1().Ingresses(namespace).Create(&resource)
+
+			if err == nil {
+				log.Infof("Successfully created ingress %s in namespace %s", serviceName, namespace)
 			}
-		}
-		return err
+			return
+		},
+		Update: func() (err error) {
+			_, err = client.ExtensionsV1beta1().Ingresses(namespace).Update(&resource)
+
+			if err == nil {
+				log.Infof("Successfully updated ingress %s in namespace %s", serviceName, namespace)
+			}
+			return
+		},
 	}
-	return nil
+
+	return upsertCommand.Do()
 }

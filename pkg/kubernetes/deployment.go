@@ -1,17 +1,13 @@
 package kubernetes
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"strings"
-	"time"
 
 	"github.com/apex/log"
 	"github.com/kontrio/kappy/pkg/model"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -80,11 +76,11 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 			Env:     envVars,
 			EnvFrom: []corev1.EnvFromSource{
 				corev1.EnvFromSource{
-					SecretRef: corev1.SecretEnvSource{
+					SecretRef: &corev1.SecretEnvSource{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: secretName,
 						},
-						Optional: true,
+						Optional: &_true,
 					},
 				},
 			},
@@ -92,14 +88,14 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 	}
 
 	deploymentSpec := appsv1.DeploymentSpec{
-		Replicas: serviceDef.Replicas,
-		Selector: metav1.LabelSelector{
+		Replicas: &serviceDef.Replicas,
+		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"name": serviceDef.Name,
 			},
 		},
 		Template: corev1.PodTemplateSpec{
-			Metadata: metav1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      serviceDef.Name,
 				Namespace: namespace,
 				Labels: map[string]string{
@@ -114,7 +110,7 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 	}
 
 	deployment := appsv1.Deployment{
-		Metadata: metav1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceDef.Name,
 			Namespace: namespace,
 			Labels: map[string]string{
@@ -128,7 +124,7 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 	return deployment
 }
 
-func UpsertDeployment(client *kubernetes.ClientSet, serviceDefinition *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) error {
+func UpsertDeployment(client *kubernetes.Clientset, serviceDefinition *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) error {
 	deployment := createDeploymentResource(serviceDefinition, serviceConfig, namespace, deployVersion, dockerRegistry)
 
 	upsert := UpsertCommand{
@@ -137,12 +133,14 @@ func UpsertDeployment(client *kubernetes.ClientSet, serviceDefinition *model.Ser
 			if err == nil {
 				log.Infof("Created deployment %s", serviceDefinition.Name)
 			}
+			return
 		},
 		Update: func() (err error) {
 			_, err = client.AppsV1().Deployments(namespace).Update(&deployment)
 			if err == nil {
 				log.Infof("Updated deployment %s", serviceDefinition.Name)
 			}
+			return
 		},
 	}
 

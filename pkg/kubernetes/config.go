@@ -7,10 +7,10 @@ import (
 
 	"github.com/kontrio/kappy/pkg/awsutil"
 	"k8s.io/client-go/kubernetes"
-	k8s "k8s.io/client-go/tools/clientcmd/api"
+	"k8s.io/client-go/rest"
 )
 
-func GetConfig(clusterName string) (*k8s.Config, error) {
+func GetConfig(clusterName string) (*rest.Config, error) {
 
 	parts := strings.Split(clusterName, ":")
 
@@ -29,7 +29,7 @@ func GetConfig(clusterName string) (*k8s.Config, error) {
 	return nil, errors.New(fmt.Sprintf("Unknown cluster type: %s (%s)", clusterType, clusterName))
 }
 
-func CreateClient(clusterName string) (*kubernetes.ClientSet, error) {
+func CreateClient(clusterName string) (*kubernetes.Clientset, error) {
 	config, errConfig := GetConfig(clusterName)
 
 	if errConfig != nil {

@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/apex/log"
-	"github.com/ericchiang/k8s"
 	"github.com/joho/godotenv"
 	"github.com/kontrio/kappy/pkg"
 	"github.com/kontrio/kappy/pkg/kubernetes"
 	"github.com/kontrio/kappy/pkg/model"
 	"github.com/spf13/cobra"
+	k8s "k8s.io/client-go/kubernetes"
 )
 
 var DeployVersion string
@@ -100,24 +100,19 @@ var deployCmd = &cobra.Command{
 				os.Exit(1)
 				return
 			}
-
-			err = kubernetes.WatchDeploymentRollout(client, serviceName, namespace)
-			if err != nil {
-				log.Infof("Failed to watch.. %s", err)
-			}
 		}
 	},
 }
 
-func deployService(client *k8s.Client, service *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) error {
-	return kubernetes.CreateUpdateDeployment(client, service, serviceConfig, namespace, deployVersion, dockerRegistry)
+func deployService(client *k8s.Clientset, service *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) error {
+	return kubernetes.UpsertDeployment(client, service, serviceConfig, namespace, deployVersion, dockerRegistry)
 }
 
 func createSecretReference(serviceName, containerName string) string {
 	return fmt.Sprintf("%s-%s-secrets", serviceName, containerName)
 }
 
-func configureSecrets(client *k8s.Client, serviceName, namespace string, containerConfig *model.ContainerConfig) error {
+func configureSecrets(client *k8s.Clientset, serviceName, namespace string, containerConfig *model.ContainerConfig) error {
 	secretReference := createSecretReference(serviceName, containerConfig.Name)
 	envVars := containerConfig.Env
 	if len(containerConfig.EnvFile) > 0 {

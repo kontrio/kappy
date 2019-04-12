@@ -1,9 +1,7 @@
 package kubernetes
 
 import (
-	"context"
-	"net/http"
-
+	"github.com/apex/log"
 	"github.com/kontrio/kappy/pkg/model"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,10 +15,10 @@ func createService(serviceDefinition *model.ServiceDefinition, namespace string)
 
 	//TODO: hardcoded
 	var port int32 = 80
-	var targetPort int32 = 3000
+	targetPort := 3000
 
 	return corev1.Service{
-		Metadata: metav1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceDefinition.Name,
 			Namespace: namespace,
 		},
@@ -36,7 +34,7 @@ func createService(serviceDefinition *model.ServiceDefinition, namespace string)
 	}
 }
 
-func CreateUpdateService(client *kubernetes.ClientSet, serviceDefinition *model.ServiceDefinition, namespace string) error {
+func CreateUpdateService(client *kubernetes.Clientset, serviceDefinition *model.ServiceDefinition, namespace string) error {
 	service := createService(serviceDefinition, namespace)
 
 	upsertCmd := UpsertCommand{
@@ -46,6 +44,7 @@ func CreateUpdateService(client *kubernetes.ClientSet, serviceDefinition *model.
 			if err == nil {
 				log.Infof("Created service %s", serviceDefinition.Name)
 			}
+			return
 		},
 		Update: func() (err error) {
 			_, err = client.CoreV1().Services(namespace).Update(&service)
@@ -53,6 +52,7 @@ func CreateUpdateService(client *kubernetes.ClientSet, serviceDefinition *model.
 			if err == nil {
 				log.Infof("Updated service %s", serviceDefinition.Name)
 			}
+			return
 		},
 	}
 
