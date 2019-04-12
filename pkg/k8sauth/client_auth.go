@@ -13,6 +13,26 @@ type TokenAuth struct {
 	Host string
 }
 
+type TLSClientAuth struct {
+	KeyData  []byte
+	CertData []byte
+	CAData   []byte
+
+	Host string
+}
+
+func ConfigFromTLSClientAuth(options TLSClientAuth) *rest.Config {
+	return &rest.Config{
+		Host: options.Host,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: false,
+			KeyData:  options.KeyData,
+			CertData: options.CertData,
+			CAData:   options.CAData,
+		},
+	}
+}
+
 func ConfigFromTokenAuth(tokenAuth TokenAuth) *rest.Config {
 	return &rest.Config{
 		Host:        tokenAuth.Host,

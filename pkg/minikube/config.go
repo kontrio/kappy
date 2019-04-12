@@ -7,11 +7,12 @@ import (
 	"path"
 
 	"github.com/apex/log"
-	"github.com/ericchiang/k8s"
+	"github.com/kontrio/kappy/pkg/k8sauth"
 	"github.com/mitchellh/go-homedir"
+	"k8s.io/client-go/rest"
 )
 
-func GetKubeConfig(clusterName string) (*k8s.Config, error) {
+func GetKubeConfig(clusterName string) (*rest.Config, error) {
 	log.Infof("Getting Minikube cluster information for cluster: '%s'", clusterName)
 	log.Warnf("Minikube support is experimental, proceed with low expectations!")
 
@@ -21,56 +22,34 @@ func GetKubeConfig(clusterName string) (*k8s.Config, error) {
 		return nil, err
 	}
 
+	log.Debugf("Reading clientcert: %s", config.HostOptions.AuthOptions.ClientCertPath)
 	clientCert, errCrt := ioutil.ReadFile(config.HostOptions.AuthOptions.ClientCertPath)
 	if errCrt != nil {
 		return nil, errCrt
 	}
 
+	log.Debugf("Reading clientcert: %s", config.HostOptions.AuthOptions.ClientKeyPath)
 	clientKey, errKey := ioutil.ReadFile(config.HostOptions.AuthOptions.ClientKeyPath)
 	if errKey != nil {
 		return nil, errKey
 	}
 
-	caCertPath, errCa := ioutil.ReadFile(config.HostOptions.AuthOptions.CaCertPath)
+	log.Debugf("Reading clientcert: %s", config.HostOptions.AuthOptions.CaCertPath)
+	caCert, errCa := ioutil.ReadFile(config.HostOptions.AuthOptions.CaCertPath)
 	if errCa != nil {
 		return nil, errCa
-	}
-
-	log.Debugf("Using client cert: %s key: %s cacert: %s", clientCert, clientKey, caCertPath)
-
-	authInfo := k8s.NamedAuthInfo{
-		Name: "minikube-auth",
-		AuthInfo: k8s.AuthInfo{
-			ClientCertificateData: clientCert,
-			ClientKeyData:         clientKey,
-		},
 	}
 
 	url := fmt.Sprintf("https://%s:8443", config.Driver.IpAddress)
 	log.Debugf("Using kube api server %s", url)
 
-	cluster := k8s.NamedCluster{
-		Name: clusterName,
-		Cluster: k8s.Cluster{
-			Server:                   url,
-			CertificateAuthorityData: caCertPath,
-		},
-	}
+	return k8sauth.ConfigFromTLSClientAuth(k8sauth.TLSClientAuth{
+		KeyData:  clientKey,
+		CertData: clientCert,
+		CAData:   caCert,
 
-	context := k8s.NamedContext{
-		Name: "main",
-		Context: k8s.Context{
-			Cluster:  clusterName,
-			AuthInfo: "minikube-auth",
-		},
-	}
-
-	return &k8s.Config{
-		Clusters:       []k8s.NamedCluster{cluster},
-		AuthInfos:      []k8s.NamedAuthInfo{authInfo},
-		Contexts:       []k8s.NamedContext{context},
-		CurrentContext: "main",
-	}, nil
+		Host: url,
+	}), nil
 }
 
 func readMiniKubeMachineConfig(clusterName string) (*minikubeConfig, error) {
@@ -99,6 +78,16 @@ func readMiniKubeMachineConfig(clusterName string) (*minikubeConfig, error) {
 	if config.Version != 3 {
 		log.Warnf("Minikube config version is '%d', this was built for version '%d', please report any errors with this version", config.Version, 3)
 	}
+
+	// HACK: For some reason the config cert pem is wrong
+	crtPath := path.Join(homeDir, ".minikube", "client.crt")
+	config.HostOptions.AuthOptions.ClientCertPath = crtPath
+
+	keyPath := path.Join(homeDir, ".minikube", "client.key")
+	config.HostOptions.AuthOptions.ClientKeyPath = keyPath
+
+	caPath := path.Join(homeDir, ".minikube", "ca.crt")
+	config.HostOptions.AuthOptions.CaCertPath = caPath
 
 	return &config, nil
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/kontrio/kappy/pkg/awsutil"
+	"github.com/kontrio/kappy/pkg/minikube"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -24,6 +25,8 @@ func GetConfig(clusterName string) (*rest.Config, error) {
 	switch clusterType {
 	case "eks":
 		return awsutil.GetKubeConfig(name)
+	case "minikube":
+		return minikube.GetKubeConfig(name)
 	}
 
 	return nil, errors.New(fmt.Sprintf("Unknown cluster type: %s (%s)", clusterType, clusterName))
