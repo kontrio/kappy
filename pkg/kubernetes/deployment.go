@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/kontrio/kappy/pkg/model"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -15,18 +16,22 @@ import (
 var _true bool = true
 var _false bool = false
 
-func canonicalImageName(imageName string, dockerRegistry string, deployVersion string, hasBuildSection bool) string {
+func canonicalImageName(imageName string, dockerRegistry string, deployVersion string, namespace string, hasBuildSection bool, hasConfigBuildSection bool) string {
 	versionedImage := imageName
 
-	if !hasBuildSection {
+	if !hasBuildSection && !hasConfigBuildSection {
 		return imageName
 	}
 
 	if !strings.Contains(imageName, "@sha256:") {
-		versionedImage = fmt.Sprintf("%s:%s", imageName, deployVersion)
+		if hasConfigBuildSection {
+			versionedImage = fmt.Sprintf("%s:%s-%s", imageName, deployVersion, namespace)
+		} else {
+			versionedImage = fmt.Sprintf("%s:%s", imageName, deployVersion)
+		}
 	}
 
-	if len(dockerRegistry) == 0 {
+	if kstrings.IsEmpty(&dockerRegistry) {
 		return versionedImage
 	}
 
@@ -63,7 +68,7 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 			ContainerPort: container.ExposePort,
 		}
 
-		imageName := canonicalImageName(container.Image, dockerRegistry, deployVersion, container.Build != nil)
+		imageName := canonicalImageName(container.Image, dockerRegistry, deployVersion, namespace, container.Build != nil, containerConfig.Build != nil)
 
 		secretName := fmt.Sprintf("%s-%s-secrets", serviceName, containerName)
 
