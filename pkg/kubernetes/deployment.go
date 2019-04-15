@@ -133,6 +133,7 @@ func UpsertDeployment(client *kubernetes.Clientset, serviceDefinition *model.Ser
 			if err == nil {
 				log.Infof("Created deployment %s", serviceDefinition.Name)
 			}
+
 			return
 		},
 		Update: func() (err error) {

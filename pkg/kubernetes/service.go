@@ -43,10 +43,22 @@ func CreateUpdateService(client *kubernetes.Clientset, serviceDefinition *model.
 
 			if err == nil {
 				log.Infof("Created service %s", serviceDefinition.Name)
+			} else {
+				// We need to now get the current version from the Kube API in order to apply an update to that version
+				result, errGet := getCurrentService(client, serviceDefinition.Name, namespace)
+
+				if errGet != nil {
+					return errGet
+				}
+
+				service.ObjectMeta.ResourceVersion = result.ObjectMeta.ResourceVersion
+				service.Spec.ClusterIP = result.Spec.ClusterIP
 			}
+
 			return
 		},
 		Update: func() (err error) {
+
 			_, err = client.CoreV1().Services(namespace).Update(&service)
 
 			if err == nil {
@@ -57,4 +69,13 @@ func CreateUpdateService(client *kubernetes.Clientset, serviceDefinition *model.
 	}
 
 	return upsertCmd.Do()
+}
+
+func getCurrentService(client *kubernetes.Clientset, name, namespace string) (result *corev1.Service, err error) {
+	result, err = client.CoreV1().Services(namespace).Get(name, metav1.GetOptions{ResourceVersion: ""})
+
+	if err != nil {
+		log.Errorf("Failed to get service %s in namespace %s: %s", name, namespace, err)
+	}
+	return
 }
