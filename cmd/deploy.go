@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -99,6 +100,12 @@ var deployCmd = &cobra.Command{
 				log.Errorf("Error: %s", err)
 				os.Exit(1)
 				return
+			}
+
+			err = kubernetes.WatchDeployment(context.Background(), client, namespace, serviceName)
+			if err != nil {
+				log.Errorf("Failed to watch deployment.. '%s'", serviceName)
+				log.Errorf("Error: %s", err)
 			}
 		}
 	},
