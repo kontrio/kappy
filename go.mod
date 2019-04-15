@@ -6,7 +6,6 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/apex/log v1.1.0
 	github.com/aws/aws-sdk-go v1.19.6
-	github.com/ericchiang/k8s v1.2.0
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
