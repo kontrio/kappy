@@ -15,26 +15,30 @@ import (
 )
 
 var ShouldPush bool = false
+var config *model.Config
 
 var buildCmd = &cobra.Command{
 	Use:   "build [stackname]",
 	Short: "Build an application or a set of applications and push to docker repositories",
-	Args:  cobra.ArbitraryArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Debug("Loading config file")
-		config, err := pkg.LoadConfig()
+	Args: func(cmd *cobra.Command, args []string) error {
+		var err error
+		config, err = pkg.LoadConfig()
 
 		if err != nil {
-			log.Errorf("Failed to load config file %s", err)
-			os.Exit(1)
+			return err
 		}
 
-		if len(args) == 0 {
-			log.Errorf("Expected stackname argument")
-			os.Exit(1)
-			return
+		if len(args) < 1 {
+			return fmt.Errorf("Requires [stackname] argument")
 		}
 
+		if config.GetStackByName(args[0]) == nil {
+			return fmt.Errorf("Stack '%s' is not defined in the .kappy configuration", args[0])
+		}
+
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]
 
 		log.Debugf("Using docker_registry: %s", config.DockerRegistry)
@@ -61,7 +65,7 @@ var buildCmd = &cobra.Command{
 		buildRecords := getBuildableImagesForStack(config, version, stackName)
 
 		for _, buildRecord := range buildRecords {
-			err = docker.RunBuild(buildRecord.buildDef, buildRecord.extraTags)
+			err := docker.RunBuild(buildRecord.buildDef, buildRecord.extraTags)
 
 			if err != nil {
 				log.Errorf("Failed to build image: %s - %s", buildRecord.imageName, err)
