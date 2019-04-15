@@ -39,14 +39,14 @@ func RunBuild(definition *model.BuildDefinition, extraTags []string) error {
 	}
 
 	dockerArgs = append(dockerArgs, definition.Context)
-	return RunDocker(dockerArgs)
+	return RunDocker(dockerArgs, definition.Environment)
 }
 
 func PushImage(tags []string) error {
 	var lastError error = nil
 
 	for _, tag := range tags {
-		err := RunDocker([]string{"push", tag})
+		err := RunDocker([]string{"push", tag}, map[string]string{})
 
 		if err != nil {
 			log.Errorf("Failed to push %s - %s", tag, err)

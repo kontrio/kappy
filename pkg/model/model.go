@@ -1,5 +1,7 @@
 package model
 
+import "github.com/kontrio/kappy/pkg/kstrings"
+
 type Config struct {
 	DockerRegistry string                       `mapstructure:"docker_registry"`
 	Services       map[string]ServiceDefinition `mapstructure:"services"`
@@ -22,6 +24,15 @@ type StackDefinition struct {
 	Config      map[string]ServiceConfig `mapstructure:"services"`
 }
 
+func (sd *StackDefinition) GetServiceConfig(name string) *ServiceConfig {
+	conf, ok := sd.Config[name]
+	if !ok {
+		return nil
+	}
+
+	return &conf
+}
+
 type ServiceConfig struct {
 	Ingress         []string          `mapstructure:"ingress"`
 	Replicas        int32             `mapstructure:"replicas"`
@@ -39,10 +50,14 @@ func (sc *ServiceConfig) GetContainerConfigByName(name string) *ContainerConfig 
 }
 
 type ContainerConfig struct {
-	Name    string            `mapstructure:"name"`
-	AppRoot string            `mapstructure:"app_dir"`
-	EnvFile string            `mapstructure:"env_file"`
-	Env     map[string]string `mapstructure:"env"`
+	Name     string            `mapstructure:"name"`
+	AppRoot  string            `mapstructure:"app_dir"`
+	EnvFile  string            `mapstructure:"env_file"`
+	Env      map[string]string `mapstructure:"env"`
+	BuildTag string            `mapstructure:"build_tag"`
+
+	// Overrides build section values in service
+	Build *BuildDefinition `mapstructure:"build"`
 }
 
 type ServiceDefinition struct {
@@ -74,12 +89,78 @@ type ContainerDefinition struct {
 }
 
 type BuildDefinition struct {
-	Context    string   `mapstructure:"context"`
-	Dockerfile string   `mapstructure:"dockerfile"`
-	BuildArgs  []string `mapstructure:"args"`
-	CacheFrom  []string `mapstructure:"cache_from"`
-	Tags       []string `mapstructure:"tags"`
-	Labels     []string `mapstructure:"labels"`
-	ShmSize    string   `mapstructure:"shm_size"`
-	Target     string   `mapstructure:"target"`
+	Context     string            `mapstructure:"context"`
+	Dockerfile  string            `mapstructure:"dockerfile"`
+	BuildArgs   []string          `mapstructure:"args"`
+	CacheFrom   []string          `mapstructure:"cache_from"`
+	Tags        []string          `mapstructure:"tags"`
+	Labels      []string          `mapstructure:"labels"`
+	ShmSize     string            `mapstructure:"shm_size"`
+	Target      string            `mapstructure:"target"`
+	Environment map[string]string `mapstructure:"env"`
+}
+
+// a takes priority
+func MergeBuildDefinitions(base *BuildDefinition, a *BuildDefinition) *BuildDefinition {
+	if base != nil && a == nil {
+		return base
+	}
+
+	if a != nil && base == nil {
+		return a
+	}
+
+	if a == nil && base == nil {
+		return nil
+	}
+
+	target := BuildDefinition{
+		Context:     base.Context,
+		Dockerfile:  base.Dockerfile,
+		BuildArgs:   base.BuildArgs,
+		CacheFrom:   base.CacheFrom,
+		Tags:        base.Tags,
+		Labels:      base.Labels,
+		ShmSize:     base.ShmSize,
+		Target:      base.Target,
+		Environment: base.Environment,
+	}
+
+	if !kstrings.IsEmpty(&a.Context) {
+		target.Context = a.Context
+	}
+
+	if !kstrings.IsEmpty(&a.Dockerfile) {
+		target.Dockerfile = a.Dockerfile
+	}
+
+	if len(a.BuildArgs) > 0 {
+		target.BuildArgs = a.BuildArgs
+	}
+
+	if len(a.CacheFrom) > 0 {
+		target.CacheFrom = a.CacheFrom
+	}
+
+	if len(a.Tags) > 0 {
+		target.Tags = a.Tags
+	}
+
+	if len(a.Labels) > 0 {
+		target.Labels = a.Labels
+	}
+
+	if !kstrings.IsEmpty(&a.ShmSize) {
+		target.ShmSize = a.ShmSize
+	}
+
+	if !kstrings.IsEmpty(&a.Target) {
+		target.Target = a.Target
+	}
+
+	if len(a.Environment) > 0 {
+		target.Environment = a.Environment
+	}
+
+	return &target
 }

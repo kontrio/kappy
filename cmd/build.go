@@ -9,6 +9,7 @@ import (
 	"github.com/kontrio/kappy/pkg/awsutil"
 	"github.com/kontrio/kappy/pkg/docker"
 	"github.com/kontrio/kappy/pkg/git"
+	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/kontrio/kappy/pkg/model"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,7 @@ import (
 var ShouldPush bool = false
 
 var buildCmd = &cobra.Command{
-	Use:   "build",
+	Use:   "build [stackname]",
 	Short: "Build an application or a set of applications and push to docker repositories",
 	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -27,6 +28,14 @@ var buildCmd = &cobra.Command{
 			log.Errorf("Failed to load config file %s", err)
 			os.Exit(1)
 		}
+
+		if len(args) == 0 {
+			log.Errorf("Expected stackname argument")
+			os.Exit(1)
+			return
+		}
+
+		stackName := args[0]
 
 		log.Debugf("Using docker_registry: %s", config.DockerRegistry)
 
@@ -49,7 +58,7 @@ var buildCmd = &cobra.Command{
 			return
 		}
 
-		buildRecords := getBuildableImages(config, version)
+		buildRecords := getBuildableImagesForStack(config, version, stackName)
 
 		for _, buildRecord := range buildRecords {
 			err = docker.RunBuild(buildRecord.buildDef, buildRecord.extraTags)
@@ -81,6 +90,51 @@ type buildRecord struct {
 	buildDef  *model.BuildDefinition
 	extraTags []string
 	imageName string
+}
+
+func getBuildableImagesForStack(config *model.Config, version, stackName string) []buildRecord {
+	imagesToBuild := []buildRecord{}
+
+	stackDefinition := config.GetStackByName(stackName)
+
+	if stackDefinition == nil {
+		log.Warnf("Could not find a stack configured %s", stackName)
+		return imagesToBuild
+	}
+
+	for serviceName, definition := range config.Services {
+		for _, container := range definition.Containers {
+			containerConfig := stackDefinition.GetServiceConfig(serviceName).GetContainerConfigByName(container.Name)
+			imageName := container.Image
+
+			if (containerConfig.Build != nil || container.Build != nil) && !kstrings.IsEmpty(&imageName) {
+				buildDefinition := model.MergeBuildDefinitions(container.Build, containerConfig.Build)
+				extraTags := []string{}
+
+				var versionImageTag string
+
+				if containerConfig.Build != nil {
+					versionImageTag = fmt.Sprintf("%s-%s", version, stackName)
+				} else {
+					versionImageTag = fmt.Sprintf("%s", version)
+				}
+
+				// If a specific build config exists for a stack, then we append the stackname to the built image
+				extraTags = append(extraTags, fmt.Sprintf("%s/%s:%s", config.DockerRegistry, imageName, versionImageTag))
+
+				for _, tag := range container.Build.Tags {
+					extraTags = append(extraTags, fmt.Sprintf("%s/%s", config.DockerRegistry, tag))
+				}
+
+				imagesToBuild = append(imagesToBuild, buildRecord{
+					imageName: imageName,
+					buildDef:  buildDefinition,
+					extraTags: extraTags,
+				})
+			}
+		}
+	}
+	return imagesToBuild
 }
 
 func getBuildableImages(config *model.Config, version string) []buildRecord {
