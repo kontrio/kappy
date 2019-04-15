@@ -6,6 +6,32 @@ jobs:
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash
+  integration_test:
+    machine: 
+      image: circleci/classic:201808-01
+      docker_layer_caching: true
+    environment:
+      GO_VERSION: 1.12.1
+      K8S_VERSION: v1.14.0
+      MINIKUBE_VERSION: v1.0.0
+      MINIKUBE_WANTUPDATENOTIFICATION: false
+      MINIKUBE_WANTREPORTERRORPROMPT: false
+      MINIKUBE_HOME: /home/circleci
+      CHANGE_MINIKUBE_NONE_USER: true
+      GOPATH: /home/circleci/go
+    working_directory: /home/circleci/github.com/kontrio/kappy
+    steps:
+      - checkout
+      - run:
+          name: Install minikube
+          command: |
+            curl -Lo minikube https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64 && chmod +x minikube
+            mkdir -p ${HOME} .kube
+            touch ${HOME}/.kube/config
+      - run:
+          name: Start minikube
+          command: |
+            sudo -E minikube start --vm-driver=none --cpus=2 --memory=2048 --kubernetes-version=${K8S_VERSION}
 workflows:
   version: 2
   release:
