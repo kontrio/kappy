@@ -22,7 +22,7 @@ var deployCmd = &cobra.Command{
 	Args:  cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Debug("Loading config file")
-		config, err := pkg.LoadConfig()
+		config, err := pkg.LoadConfig(&KappyFile)
 
 		if err != nil {
 			log.Errorf("Failed to load config file %s", err)

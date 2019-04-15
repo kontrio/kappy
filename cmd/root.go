@@ -10,6 +10,7 @@ import (
 )
 
 var Verbose bool
+var KappyFile string = ""
 
 var rootCmd = &cobra.Command{
 	Use:   "kappy",
@@ -24,13 +25,12 @@ var rootCmd = &cobra.Command{
 
 func Init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().StringVarP(&KappyFile, "file", "f", "", "Alternative .kappy.yml")
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(buildCmd)
-	rootCmd.AddCommand(kubectlCmd)
 
 	initBuildCmd()
 	initDeployCmd()
-	initKubectlCmd()
 }
 
 func Execute() {

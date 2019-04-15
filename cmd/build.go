@@ -22,7 +22,7 @@ var buildCmd = &cobra.Command{
 	Short: "Build an application or a set of applications and push to docker repositories",
 	Args: func(cmd *cobra.Command, args []string) error {
 		var err error
-		config, err = pkg.LoadConfig()
+		config, err = pkg.LoadConfig(&KappyFile)
 
 		if err != nil {
 			return err

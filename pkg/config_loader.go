@@ -2,14 +2,19 @@ package pkg
 
 import (
 	"github.com/apex/log"
+	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/kontrio/kappy/pkg/model"
 	viper "github.com/spf13/viper"
 )
 
-func initConfig() (*viper.Viper, error) {
+func initConfig(fileOverride *string) (*viper.Viper, error) {
 	v := viper.New()
 	v.AddConfigPath(".")
 	v.SetConfigName(".kappy")
+
+	if !kstrings.IsEmpty(fileOverride) {
+		v.SetConfigFile(*fileOverride)
+	}
 
 	err := v.ReadInConfig()
 
@@ -20,8 +25,8 @@ func initConfig() (*viper.Viper, error) {
 	return v, nil
 }
 
-func LoadConfig() (*model.Config, error) {
-	v, errConfig := initConfig()
+func LoadConfig(fileOverride *string) (*model.Config, error) {
+	v, errConfig := initConfig(fileOverride)
 
 	if errConfig != nil {
 		return nil, errConfig
