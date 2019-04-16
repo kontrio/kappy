@@ -17,7 +17,7 @@ func CreateSecret(client *kubernetes.Clientset, secretRef, namespace string, sec
 
 	log.Infof("Creating secrets '%s' in namespace: '%s'", secretRef, ns)
 
-	encodedSecrets := base64EncodeMapOfStrings(secrets)
+	encodedSecrets := convertToBytes(secrets)
 
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

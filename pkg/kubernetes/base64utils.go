@@ -25,3 +25,11 @@ func base64EncodeMapOfStrings(src map[string]string) map[string][]byte {
 	}
 	return result
 }
+
+func convertToBytes(src map[string]string) map[string][]byte {
+	result := make(map[string][]byte)
+	for key, value := range src {
+		result[key] = []byte(value)
+	}
+	return result
+}
