@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -12,6 +12,12 @@ import (
 var Verbose bool
 var KappyFile string = ""
 
+type VersionInfo struct {
+	Version string
+	Commit  string
+	Date    string
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "kappy",
 	Short: "kappy is an opinionated kubectl wrapper",
@@ -23,7 +29,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Init() {
+func Init(versionInfo *VersionInfo) {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVarP(&KappyFile, "file", "f", "", "Alternative .kappy.yml")
 	rootCmd.AddCommand(deployCmd)
@@ -32,6 +38,7 @@ func Init() {
 
 	initBuildCmd()
 	initDeployCmd()
+	initVersionCmd(versionInfo)
 }
 
 func Execute() {
