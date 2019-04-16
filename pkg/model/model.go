@@ -89,15 +89,14 @@ type ContainerDefinition struct {
 }
 
 type BuildDefinition struct {
-	Context     string            `mapstructure:"context"`
-	Dockerfile  string            `mapstructure:"dockerfile"`
-	BuildArgs   []string          `mapstructure:"args"`
-	CacheFrom   []string          `mapstructure:"cache_from"`
-	Tags        []string          `mapstructure:"tags"`
-	Labels      []string          `mapstructure:"labels"`
-	ShmSize     string            `mapstructure:"shm_size"`
-	Target      string            `mapstructure:"target"`
-	Environment map[string]string `mapstructure:"env"`
+	Context    string            `mapstructure:"context"`
+	Dockerfile string            `mapstructure:"dockerfile"`
+	BuildArgs  map[string]string `mapstructure:"args"`
+	CacheFrom  []string          `mapstructure:"cache_from"`
+	Tags       []string          `mapstructure:"tags"`
+	Labels     []string          `mapstructure:"labels"`
+	ShmSize    string            `mapstructure:"shm_size"`
+	Target     string            `mapstructure:"target"`
 }
 
 // a takes priority
@@ -115,15 +114,14 @@ func MergeBuildDefinitions(base *BuildDefinition, a *BuildDefinition) *BuildDefi
 	}
 
 	target := BuildDefinition{
-		Context:     base.Context,
-		Dockerfile:  base.Dockerfile,
-		BuildArgs:   base.BuildArgs,
-		CacheFrom:   base.CacheFrom,
-		Tags:        base.Tags,
-		Labels:      base.Labels,
-		ShmSize:     base.ShmSize,
-		Target:      base.Target,
-		Environment: base.Environment,
+		Context:    base.Context,
+		Dockerfile: base.Dockerfile,
+		BuildArgs:  base.BuildArgs,
+		CacheFrom:  base.CacheFrom,
+		Tags:       base.Tags,
+		Labels:     base.Labels,
+		ShmSize:    base.ShmSize,
+		Target:     base.Target,
 	}
 
 	if !kstrings.IsEmpty(&a.Context) {
@@ -135,7 +133,7 @@ func MergeBuildDefinitions(base *BuildDefinition, a *BuildDefinition) *BuildDefi
 	}
 
 	if len(a.BuildArgs) > 0 {
-		target.BuildArgs = a.BuildArgs
+		target.BuildArgs = kstrings.MergeMaps(base.BuildArgs, a.BuildArgs)
 	}
 
 	if len(a.CacheFrom) > 0 {
@@ -156,10 +154,6 @@ func MergeBuildDefinitions(base *BuildDefinition, a *BuildDefinition) *BuildDefi
 
 	if !kstrings.IsEmpty(&a.Target) {
 		target.Target = a.Target
-	}
-
-	if len(a.Environment) > 0 {
-		target.Environment = a.Environment
 	}
 
 	return &target

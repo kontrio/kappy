@@ -8,6 +8,7 @@ import (
 	"github.com/apex/log"
 	"github.com/joho/godotenv"
 	"github.com/kontrio/kappy/pkg"
+	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/kontrio/kappy/pkg/kubernetes"
 	"github.com/kontrio/kappy/pkg/model"
 	"github.com/spf13/cobra"
@@ -130,7 +131,7 @@ func configureSecrets(client *k8s.Clientset, serviceName, namespace string, cont
 		}
 
 		// Second argument take precedence
-		envVars = mergeMap(envVars, loadedEnvVars)
+		envVars = kstrings.MergeMaps(envVars, loadedEnvVars)
 	}
 
 	return kubernetes.CreateSecret(client, secretReference, namespace, envVars, map[string]string{
@@ -141,17 +142,4 @@ func configureSecrets(client *k8s.Clientset, serviceName, namespace string, cont
 func initDeployCmd() {
 	deployCmd.Flags().StringVarP(&DeployVersion, "version", "", "", "Version (corresponds to repository image tag")
 	deployCmd.MarkFlagRequired("version")
-}
-
-func mergeMap(a, b map[string]string) map[string]string {
-	newMap := make(map[string]string)
-	for ka, va := range a {
-		newMap[ka] = va
-	}
-
-	for kb, vb := range b {
-		newMap[kb] = vb
-	}
-
-	return newMap
 }

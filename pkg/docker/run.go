@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/apex/log"
 	"github.com/kr/pty"
 )
 
@@ -13,6 +14,8 @@ func RunDocker(args []string, env map[string]string) error {
 	dockerCmd := exec.Command("docker", args...)
 
 	dockerCmd.Env = keyValueStrings(env)
+
+	log.Debugf("Env vars for build: %#v", dockerCmd.Env)
 
 	outFile, err := pty.Start(dockerCmd)
 

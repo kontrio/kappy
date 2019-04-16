@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"fmt"
+
 	"github.com/apex/log"
 	"github.com/kontrio/kappy/pkg/model"
 )
@@ -26,8 +28,9 @@ func RunBuild(definition *model.BuildDefinition, extraTags []string) error {
 		dockerArgs = append(dockerArgs, "--shm-size", definition.ShmSize)
 	}
 
-	for _, arg := range definition.BuildArgs {
-		dockerArgs = append(dockerArgs, "--build-arg", arg)
+	for key, arg := range definition.BuildArgs {
+		buildArg := fmt.Sprintf("%s=%s", key, arg)
+		dockerArgs = append(dockerArgs, "--build-arg", buildArg)
 	}
 
 	for _, label := range definition.Labels {
@@ -39,7 +42,7 @@ func RunBuild(definition *model.BuildDefinition, extraTags []string) error {
 	}
 
 	dockerArgs = append(dockerArgs, definition.Context)
-	return RunDocker(dockerArgs, definition.Environment)
+	return RunDocker(dockerArgs, map[string]string{})
 }
 
 func PushImage(tags []string) error {
