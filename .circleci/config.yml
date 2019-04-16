@@ -5,7 +5,11 @@ jobs:
       - image: circleci/golang:1.12
     steps:
       - checkout
-      - run: curl -sL https://git.io/goreleaser | bash
+      - run: 
+          name: goreleaser
+          command: |
+            cd cmd/
+            curl -sL https://git.io/goreleaser | bash
   integration_test:
     machine: 
       image: circleci/classic:201808-01

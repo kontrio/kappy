@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -28,6 +28,7 @@ func Init() {
 	rootCmd.PersistentFlags().StringVarP(&KappyFile, "file", "f", "", "Alternative .kappy.yml")
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(buildCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	initBuildCmd()
 	initDeployCmd()
