@@ -111,13 +111,19 @@ func getBuildableImagesForStack(config *model.Config, version, stackName string)
 			containerConfig := stackDefinition.GetServiceConfig(serviceName).GetContainerConfigByName(container.Name)
 			imageName := container.Image
 
-			if (containerConfig.Build != nil || container.Build != nil) && !kstrings.IsEmpty(&imageName) {
-				buildDefinition := model.MergeBuildDefinitions(container.Build, containerConfig.Build)
+			hasContainerConfig := containerConfig != nil
+
+			if ((hasContainerConfig && containerConfig.Build != nil) || container.Build != nil) && !kstrings.IsEmpty(&imageName) {
+				buildDefinition := container.Build
+				if hasContainerConfig {
+					buildDefinition = model.MergeBuildDefinitions(container.Build, containerConfig.Build)
+				}
+
 				extraTags := []string{}
 
 				var versionImageTag string
 
-				if containerConfig.Build != nil {
+				if hasContainerConfig && containerConfig.Build != nil {
 					versionImageTag = fmt.Sprintf("%s-%s", version, stackName)
 				} else {
 					versionImageTag = fmt.Sprintf("%s", version)
