@@ -53,7 +53,10 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 
 		envVars := []corev1.EnvVar{}
 
-		if containerConfig != nil {
+		hasContainerConfig := containerConfig != nil
+		hasContainerConfigBuildSection := hasContainerConfig && containerConfig.Build != nil
+
+		if hasContainerConfig {
 			for key, value := range containerConfig.Env {
 				envVars = append(envVars, corev1.EnvVar{
 					Name:  key,
@@ -68,7 +71,7 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 			ContainerPort: container.ExposePort,
 		}
 
-		imageName := canonicalImageName(container.Image, dockerRegistry, deployVersion, namespace, container.Build != nil, containerConfig.Build != nil)
+		imageName := canonicalImageName(container.Image, dockerRegistry, deployVersion, namespace, container.Build != nil, hasContainerConfigBuildSection)
 
 		secretName := fmt.Sprintf("%s-%s-secrets", serviceName, containerName)
 

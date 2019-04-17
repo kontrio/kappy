@@ -64,27 +64,30 @@ var deployCmd = &cobra.Command{
 
 			serviceConfig, present := stackDef.Config[serviceName]
 
-			if !present {
-				continue
+			if present {
+				for _, containerConfig := range serviceConfig.ContainerConfig {
+					err := configureSecrets(client, serviceName, namespace, &containerConfig)
+
+					if err != nil {
+						log.Errorf("Failed to configure secrets for '%s' in the '%s' container", serviceName, containerConfig.Name)
+						log.Errorf("Error: %s", err)
+						os.Exit(1)
+						return
+					}
+				}
+			} else {
+				serviceConfig = model.ServiceConfig{}
 			}
 
-			for _, containerConfig := range serviceConfig.ContainerConfig {
-				err := configureSecrets(client, serviceName, namespace, &containerConfig)
-
+			// Create ingress for everything external
+			if !service.InternalOnly {
+				err := kubernetes.CreateUpdateIngress(client, &serviceConfig, serviceName, namespace)
 				if err != nil {
-					log.Errorf("Failed to configure secrets for '%s' in the '%s' container", serviceName, containerConfig.Name)
+					log.Errorf("Failed to create ingress: '%s'", serviceName)
 					log.Errorf("Error: %s", err)
 					os.Exit(1)
 					return
 				}
-			}
-
-			err := kubernetes.CreateUpdateIngress(client, &serviceConfig, serviceName, namespace)
-			if err != nil {
-				log.Errorf("Failed to create ingress: '%s'", serviceName)
-				log.Errorf("Error: %s", err)
-				os.Exit(1)
-				return
 			}
 
 			err = kubernetes.CreateUpdateService(client, &service, namespace)

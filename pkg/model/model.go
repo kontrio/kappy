@@ -35,11 +35,13 @@ func (sd *StackDefinition) GetServiceConfig(name string) *ServiceConfig {
 
 type ServiceConfig struct {
 	Ingress         []string          `mapstructure:"ingress"`
-	Replicas        int32             `mapstructure:"replicas"`
 	ContainerConfig []ContainerConfig `mapstructure:"containers"`
 }
 
 func (sc *ServiceConfig) GetContainerConfigByName(name string) *ContainerConfig {
+	if sc.ContainerConfig == nil || sc == nil {
+		return nil
+	}
 	for _, conf := range sc.ContainerConfig {
 		if conf.Name == name {
 			return &conf
@@ -68,6 +70,8 @@ type ServiceDefinition struct {
 	RevisionHistoryLimit    int32                 `mapstructure:"revisionHistoryLimit"`
 	MaxSurge                int32                 `mapstructure:"maxSurge"`
 	MaxUnavailable          int32                 `mapstructure:"maxUnavailable"`
+	ServicePorts            []string              `mapstructure:"service_ports"`
+	InternalOnly            bool                  `mapstructure:"internal"`
 	Containers              []ContainerDefinition `mapstructure:"containers"`
 	// TODO add volumes
 }

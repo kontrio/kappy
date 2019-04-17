@@ -81,7 +81,7 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		log.Infof("Use this version with \"kappy deploy [stackname] --version %s\" to deploy this build", version)
+		log.Infof("Use this version with \"kappy deploy %s --version %s\" to deploy this build", stackName, version)
 		log.Infof("Versioned: '%s'", version)
 	},
 }
@@ -108,10 +108,17 @@ func getBuildableImagesForStack(config *model.Config, version, stackName string)
 
 	for serviceName, definition := range config.Services {
 		for _, container := range definition.Containers {
-			containerConfig := stackDefinition.GetServiceConfig(serviceName).GetContainerConfigByName(container.Name)
 			imageName := container.Image
 
-			hasContainerConfig := containerConfig != nil
+			hasContainerConfig := false
+
+			serviceConfig := stackDefinition.GetServiceConfig(serviceName)
+
+			containerConfig := &model.ContainerConfig{}
+			if serviceConfig != nil {
+				containerConfig = serviceConfig.GetContainerConfigByName(container.Name)
+				hasContainerConfig = containerConfig != nil
+			}
 
 			if ((hasContainerConfig && containerConfig.Build != nil) || container.Build != nil) && !kstrings.IsEmpty(&imageName) {
 				buildDefinition := container.Build

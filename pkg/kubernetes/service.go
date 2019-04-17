@@ -1,6 +1,10 @@
 package kubernetes
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/apex/log"
 	"github.com/kontrio/kappy/pkg/model"
 	corev1 "k8s.io/api/core/v1"
@@ -9,37 +13,66 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func createService(serviceDefinition *model.ServiceDefinition, namespace string) corev1.Service {
+func createService(serviceDefinition *model.ServiceDefinition, namespace string) (*corev1.Service, error) {
 	serviceSelector := make(map[string]string)
 	serviceSelector["name"] = serviceDefinition.Name
 
-	//TODO: hardcoded
-	var port int32 = 80
-	targetPort := 3000
+	servicePorts := []corev1.ServicePort{}
 
-	return corev1.Service{
+	for _, mapping := range serviceDefinition.ServicePorts {
+		mapping := strings.Split(mapping, ":")
+		if len(mapping) != 2 {
+			return nil, fmt.Errorf("Port mapping for service: %s is invalid '%s', expected `serviceport:containerport`", serviceDefinition.Name, mapping)
+		}
+
+		servicePort, errParseServicePort := strconv.ParseInt(mapping[0], 10, 32)
+
+		if errParseServicePort != nil {
+			return nil, fmt.Errorf("Could not parse service port: %s", errParseServicePort)
+		}
+
+		containerPort, errParseContainerPort := strconv.ParseInt(mapping[1], 10, 32)
+
+		if errParseContainerPort != nil {
+			return nil, fmt.Errorf("Could not parse container port: %s", errParseServicePort)
+		}
+
+		servicePorts = append(servicePorts, corev1.ServicePort{
+			Port:       int32(servicePort),
+			TargetPort: intstr.FromInt(int(containerPort)),
+		})
+	}
+
+	if len(servicePorts) == 0 {
+		//TODO: hardcoded defaults legacy
+		servicePorts = append(servicePorts, corev1.ServicePort{
+			Port:       80,
+			TargetPort: intstr.FromInt(3000),
+		})
+	}
+
+	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceDefinition.Name,
 			Namespace: namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: serviceSelector,
-			Ports: []corev1.ServicePort{
-				corev1.ServicePort{
-					Port:       port,
-					TargetPort: intstr.FromInt(targetPort),
-				},
-			},
+			Ports:    servicePorts,
 		},
-	}
+	}, nil
 }
 
 func CreateUpdateService(client *kubernetes.Clientset, serviceDefinition *model.ServiceDefinition, namespace string) error {
-	service := createService(serviceDefinition, namespace)
+	service, errValid := createService(serviceDefinition, namespace)
+
+	if errValid != nil {
+		return errValid
+	}
 
 	upsertCmd := UpsertCommand{
 		Create: func() (err error) {
-			_, err = client.CoreV1().Services(namespace).Create(&service)
+			_, err = client.CoreV1().Services(namespace).Create(service)
 
 			if err == nil {
 				log.Infof("Created service %s", serviceDefinition.Name)
@@ -59,7 +92,7 @@ func CreateUpdateService(client *kubernetes.Clientset, serviceDefinition *model.
 		},
 		Update: func() (err error) {
 
-			_, err = client.CoreV1().Services(namespace).Update(&service)
+			_, err = client.CoreV1().Services(namespace).Update(service)
 
 			if err == nil {
 				log.Infof("Updated service %s", serviceDefinition.Name)
