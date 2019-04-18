@@ -54,7 +54,7 @@ jobs:
           name: Install minikube
           command: |
             curl -Lo minikube https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64 && chmod +x minikube
-            mkdir -p ${HOME} .kube
+            mkdir -p ${HOME}/.kube
             touch ${HOME}/.kube/config
       - run:
           name: Setup kubectl
