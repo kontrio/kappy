@@ -1,11 +1,39 @@
 version: 2.1
+
+base_image: &base_image
+  circleci/golang:1.12
+
+working_directory: &working_directory
+  /home/circleci/github.com/kontrio/kappy
+
+repo_cache_key: &repo_cache_key
+  kappy-{{ .Branch }}-{{ .Revision }}
+
+restore_repo: &restore_repo
+  restore_cache:
+    key: *repo_cache_key
+
+save_repo: &save_repo
+  save_cache:
+    key: *repo_cache_key
+    paths:
+      - *working_directory
 jobs:
   release:
     docker:
-      - image: circleci/golang:1.12
+      - image: *base_image
+    working_directory: *working_directory
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash
+  build:
+    docker:
+      - image: *base_image
+    working_directory: *working_directory
+    steps:
+      - checkout
+      - run: go build .
+        
   integration_test:
     machine: 
       image: circleci/classic:201808-01
@@ -29,11 +57,25 @@ jobs:
             mkdir -p ${HOME} .kube
             touch ${HOME}/.kube/config
       - run:
+          name: Setup kubectl
+          command: |
+            curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+            mkdir -p ${HOME}/.kube
+            touch ${HOME}/.kube/config
+      - run:
           name: Start minikube
           command: |
             sudo -E minikube start --vm-driver=none --cpus=2 --memory=2048 --kubernetes-version=${K8S_VERSION}
+      - run:
+          name: Test minikube/kubectl
+          command: |
+            kubectl get pods --all-namespaces
 workflows:
   version: 2
+  test:
+    jobs:
+      - integration_test:
+          {}
   release:
     jobs:
       - release:
