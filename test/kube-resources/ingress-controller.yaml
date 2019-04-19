@@ -1,5 +1,12 @@
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-layer
+  labels:
+    name: ingress-layer
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: traefik-ingress-controller
