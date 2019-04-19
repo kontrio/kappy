@@ -16,7 +16,7 @@ kubectl get pods --all-namespaces
 kappy_deploy() {
   set -e
   $KAPPY_BIN_DIR/kappy version
-  $KAPPY_BIN_DIR/kappy deploy $1 --file ./test/kappy.test.$1.yaml --version 1
+  $KAPPY_BIN_DIR/kappy deploy $1 --file ./test/kappy.test.$1.yaml --version 1 --verbose
 }
 
 test_internalservice() {
