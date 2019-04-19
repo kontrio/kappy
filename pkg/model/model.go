@@ -66,7 +66,7 @@ type ServiceDefinition struct {
 	Name                    string                `mapstructure:"name"`
 	Replicas                int32                 `mapstructure:"replicas"`
 	MinReadySeconds         int32                 `mapstructure:"minReadySeconds"`
-	ProgressDeadlineSeconds int32                 `mapstructure:"ProgressDeadlineSeconds"`
+	ProgressDeadlineSeconds int32                 `mapstructure:"progressDeadlineSeconds"`
 	RevisionHistoryLimit    int32                 `mapstructure:"revisionHistoryLimit"`
 	MaxSurge                int32                 `mapstructure:"maxSurge"`
 	MaxUnavailable          int32                 `mapstructure:"maxUnavailable"`

@@ -73,7 +73,7 @@ func DoEcrLogin(registry *string) error {
 	}
 
 	for _, authToken := range authTokens {
-		dockerErr := docker.RunDocker([]string{"login", "-u", authToken.User, "-p", authToken.Pass, authToken.ProxyEndpoint}, map[string]string{})
+		dockerErr := docker.RunDocker([]string{"login", "-u", authToken.User, "-p", authToken.Pass, authToken.ProxyEndpoint})
 
 		if dockerErr != nil {
 			return dockerErr

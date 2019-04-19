@@ -16,9 +16,10 @@ import (
 
 var ShouldPush bool = false
 var config *model.Config
+var serviceToBuild string
 
 var buildCmd = &cobra.Command{
-	Use:   "build [stackname]",
+	Use:   "build [stackname] [servicename]",
 	Short: "Build an application or a set of applications and push to docker repositories",
 	Args: func(cmd *cobra.Command, args []string) error {
 		var err error
@@ -34,6 +35,11 @@ var buildCmd = &cobra.Command{
 
 		if config.GetStackByName(args[0]) == nil {
 			return fmt.Errorf("Stack '%s' is not defined in the .kappy configuration", args[0])
+		}
+
+		serviceToBuild = ""
+		if len(args) > 1 {
+			serviceToBuild = args[1]
 		}
 
 		return nil
@@ -62,7 +68,7 @@ var buildCmd = &cobra.Command{
 			return
 		}
 
-		buildRecords := getBuildableImagesForStack(config, version, stackName)
+		buildRecords := getBuildableImagesForStack(config, version, serviceToBuild, stackName)
 
 		for _, buildRecord := range buildRecords {
 			err := docker.RunBuild(buildRecord.buildDef, buildRecord.extraTags)
@@ -96,7 +102,7 @@ type buildRecord struct {
 	imageName string
 }
 
-func getBuildableImagesForStack(config *model.Config, version, stackName string) []buildRecord {
+func getBuildableImagesForStack(config *model.Config, version, serviceToBuild, stackName string) []buildRecord {
 	imagesToBuild := []buildRecord{}
 
 	stackDefinition := config.GetStackByName(stackName)
@@ -107,6 +113,11 @@ func getBuildableImagesForStack(config *model.Config, version, stackName string)
 	}
 
 	for serviceName, definition := range config.Services {
+
+		if !kstrings.IsEmpty(&serviceToBuild) && serviceToBuild != serviceName {
+			continue
+		}
+
 		for _, container := range definition.Containers {
 			imageName := container.Image
 
