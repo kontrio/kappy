@@ -3,7 +3,7 @@ set -e
 
 TAR_FILE="/tmp/goreleaser.tar.gz"
 RELEASES_URL="https://github.com/goreleaser/goreleaser/releases"
-test -z "$TMPDIR" && TMPDIR="$(mktemp -d)"
+TMPDIR="$(mktemp -d)"
 
 last_version() {
   curl -sL -o /dev/null -w %{url_effective} "$RELEASES_URL/latest" | 
@@ -25,4 +25,5 @@ install() {
 }
 
 install
+echo $TMPDIR
 "${TMPDIR}/goreleaser" "$@"
