@@ -39,8 +39,12 @@ test_externalservice() {
   set -x
   result=$(curl https://$(minikube ip)/ -H "Host: testecho.kappycitests.kontr.io" -k)
 
+  kubectl get pods --namespace externalservice
+  kubectl get services --namespace externalservice
+  kubectl get endpoints echo-test --namespace externalservice
   kubectl get ingresses --namespace externalservice
   kubectl get certificates --namespace externalservice
+  sleep 5
 
   if [ "$result" != "\"received request\"" ];then 
     echo "Request to externally deployed service failed"
