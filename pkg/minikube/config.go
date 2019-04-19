@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"path"
 
 	"github.com/apex/log"
@@ -45,7 +46,12 @@ func GetKubeConfig(clusterName string) (*rest.Config, error) {
 
 	// Supports the "none" minikube driver
 	if kstrings.IsEmpty(&config.Driver.IpAddress) {
-		ipAddress = "127.0.0.1"
+		machineIP, err := machineIP()
+		if err != nil {
+			log.Errorf("Could not determine the machines IP address from the network interfaces: %s", err)
+		} else {
+			ipAddress = machineIP
+		}
 	}
 
 	url := fmt.Sprintf("https://%s:8443", ipAddress)
@@ -124,4 +130,41 @@ type authOptions struct {
 	ServerKeyPath    string `json:"ServerKeyPath"`
 	ClientKeyPath    string `json:"ClientKeyPath"`
 	ClientCertPath   string `json:"ClientCertPath"`
+}
+
+func machineIP() (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			return ip.String(), nil
+		}
+	}
+	return "", fmt.Errorf("Could not determine local IP address")
 }
