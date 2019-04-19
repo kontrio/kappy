@@ -26,14 +26,6 @@ jobs:
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash
-  build:
-    docker:
-      - image: *base_image
-    working_directory: *working_directory
-    steps:
-      - checkout
-      - run: go build .
-      - 
         
   integration_test:
     machine: 
