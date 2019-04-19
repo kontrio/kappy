@@ -67,6 +67,8 @@ func readMiniKubeMachineConfig(clusterName string) (*minikubeConfig, error) {
 		return nil, errRead
 	}
 
+	log.Debugf("FULL minikube config: \n%s", string(configData))
+
 	config := minikubeConfig{}
 	errMarshal := json.Unmarshal(configData, &config)
 
