@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -e
+set -ex
 
 TAR_FILE="/tmp/goreleaser.tar.gz"
 RELEASES_URL="https://github.com/goreleaser/goreleaser/releases"
