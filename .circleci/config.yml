@@ -25,8 +25,16 @@ jobs:
     working_directory: *working_directory
     steps:
       - checkout
-      - run: curl -sL https://git.io/goreleaser | bash
-        
+      - run: ./hack/goreleaser.sh
+  build:
+    docker:
+      - image: *base_image
+    working_directory: *working_directory
+    steps: 
+      - checkout
+      - run: ./hack/goreleaser.sh --skip-publish
+      - *save_repo
+      
   integration_test:
     machine: 
       image: circleci/classic:201808-01
@@ -42,7 +50,7 @@ jobs:
       GOPATH: /home/circleci/go
     working_directory: /home/circleci/github.com/kontrio/kappy
     steps:
-      - checkout
+      - *restore_repo
       - run:
           name: Install minikube
           command: |
@@ -75,8 +83,10 @@ workflows:
   version: 2
   test:
     jobs:
+      - build
       - integration_test:
-          {}
+          requires:
+            - build
   release:
     jobs:
       - release:
