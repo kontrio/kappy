@@ -1,7 +1,7 @@
 version: 1
 services:
-  echo_test:
-    service-ports:
+  echo-test:
+    service_ports:
       - 80:4000
     replicas: 1
     containers:
@@ -13,11 +13,9 @@ services:
         port: 4000
 
 stacks:
-  - name: test-internalservice
+  - name: externalservice
     k8s_cluster_name: minikube:minikube
     services:
       echo-test:
         ingress:
           - testecho.kappycitests.kontr.io
-
-

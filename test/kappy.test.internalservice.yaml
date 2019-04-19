@@ -14,7 +14,7 @@ services:
         port: 4000
 
 stacks:
-  - name: test-internalservice
+  - name: internalservice
     k8s_cluster_name: minikube:minikube
     services:
       {}
