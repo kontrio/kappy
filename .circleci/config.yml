@@ -32,7 +32,7 @@ jobs:
     working_directory: *working_directory
     steps: 
       - checkout
-      - run: ./hack/goreleaser.sh --skip-publish
+      - run: ./hack/goreleaser.sh --snapshot --rm-dist
       - *save_repo
       
   integration_test:
