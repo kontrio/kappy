@@ -70,7 +70,9 @@ jobs:
       - run:
           name: Start minikube
           command: |
-            minikube start --vm-driver=none --cpus=2 --memory=2048 --kubernetes-version=${K8S_VERSION}
+            sudo minikube start --vm-driver=none --cpus=2 --memory=2048 --kubernetes-version=${K8S_VERSION}
+            sudo cp -R ~/.minikube /home/circleci/.minikube
+            sudo chown -R circleci /home/circleci/.minikube
       - run:
           name: Test minikube/kubectl
           command: |
