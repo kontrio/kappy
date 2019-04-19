@@ -21,7 +21,7 @@ install() {
   rm -f "$TAR_FILE"
   curl -s -L -o "$TAR_FILE" \
     "$RELEASES_URL/download/$VERSION/goreleaser_$(uname -s)_$(uname -m).tar.gz"
-  tar -xf "$TAR_FILE" -C "$TMP_DIR"
+  tar -xf "$TAR_FILE" -C "$TMPDIR"
 }
 
 install
