@@ -54,8 +54,7 @@ jobs:
       - run:
           name: Check kappy tool built
           command: |
-            TARGET="$(uname -s)_$(uname -m)"
-            ./dist/${TARGET}/kappy version
+            ./dist/linux_386/kappy version
       - run:
           name: Install minikube
           command: |
