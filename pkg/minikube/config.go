@@ -75,10 +75,6 @@ func readMiniKubeMachineConfig(clusterName string) (*minikubeConfig, error) {
 		return nil, errMarshal
 	}
 
-	if config.Version != 3 {
-		log.Warnf("Minikube config version is '%d', this was built for version '%d', please report any errors with this version", config.Version, 3)
-	}
-
 	// HACK: For some reason the config cert pem is wrong
 	crtPath := path.Join(homeDir, ".minikube", "client.crt")
 	config.HostOptions.AuthOptions.ClientCertPath = crtPath
@@ -88,6 +84,8 @@ func readMiniKubeMachineConfig(clusterName string) (*minikubeConfig, error) {
 
 	caPath := path.Join(homeDir, ".minikube", "ca.crt")
 	config.HostOptions.AuthOptions.CaCertPath = caPath
+
+	log.Debugf("%#v", config)
 
 	return &config, nil
 
