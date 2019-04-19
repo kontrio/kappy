@@ -8,6 +8,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/kontrio/kappy/pkg/k8sauth"
+	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/mitchellh/go-homedir"
 	"k8s.io/client-go/rest"
 )
@@ -40,7 +41,14 @@ func GetKubeConfig(clusterName string) (*rest.Config, error) {
 		return nil, errCa
 	}
 
-	url := fmt.Sprintf("https://%s:8443", config.Driver.IpAddress)
+	ipAddress := config.Driver.IpAddress
+
+	// Supports the "none" minikube driver
+	if kstrings.IsEmpty(&config.Driver.IpAddress) {
+		ipAddress = "127.0.0.1"
+	}
+
+	url := fmt.Sprintf("https://%s:8443", ipAddress)
 	log.Debugf("Using kube api server %s", url)
 
 	return k8sauth.ConfigFromTLSClientAuth(k8sauth.TLSClientAuth{
