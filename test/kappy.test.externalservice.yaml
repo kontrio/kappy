@@ -1,0 +1,23 @@
+version: 1
+services:
+  echo_test:
+    service-ports:
+      - 80:4000
+    replicas: 1
+    containers:
+      - name: default
+        image: hashicorp/http-echo
+        args:
+          - -listen=:4000
+          - -text="received request"
+        port: 4000
+
+stacks:
+  - name: test-internalservice
+    k8s_cluster_name: minikube:minikube
+    services:
+      echo-test:
+        ingress:
+          - testecho.kappycitests.kontr.io
+
+

@@ -33,6 +33,7 @@ jobs:
     steps:
       - checkout
       - run: go build .
+      - 
         
   integration_test:
     machine: 
@@ -63,6 +64,10 @@ jobs:
             mkdir -p ${HOME}/.kube
             touch ${HOME}/.kube/config
       - run:
+          name: Disable dev minikube addons
+          command: |
+            minikube addons disable ingress
+      - run:
           name: Start minikube
           command: |
             sudo -E minikube start --vm-driver=none --cpus=2 --memory=2048 --kubernetes-version=${K8S_VERSION}
@@ -70,6 +75,14 @@ jobs:
           name: Test minikube/kubectl
           command: |
             kubectl get pods --all-namespaces
+      - run:
+          name: Apply testing k8s resources
+          command: |
+            kubectl apply -f ./test/kube-resources
+      - run:
+          name: Kappy Integration Test Suite
+          command: |
+            ./hack/integration-tests.sh
 workflows:
   version: 2
   test:
