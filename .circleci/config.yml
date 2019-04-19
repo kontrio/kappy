@@ -56,13 +56,13 @@ jobs:
             mkdir -p ${HOME}/.kube
             touch ${HOME}/.kube/config
       - run:
-          name: Disable dev minikube addons
-          command: |
-            minikube addons disable ingress
-      - run:
           name: Start minikube
           command: |
             sudo -E minikube start --vm-driver=none --cpus=2 --memory=2048 --kubernetes-version=${K8S_VERSION}
+      - run:
+          name: Disable dev minikube addons
+          command: |
+            sudo minikube addons disable ingress
       - run:
           name: Test minikube/kubectl
           command: |
