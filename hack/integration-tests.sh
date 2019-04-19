@@ -36,7 +36,8 @@ test_internalservice() {
 test_externalservice() {
   kappy_deploy externalservice
 
-  result=$(curl -s https://$(minikube ip)/ -H "Host: testecho.kappycitests.kontr.io" -k)
+  set -x
+  result=$(curl https://$(minikube ip)/ -H "Host: testecho.kappycitests.kontr.io" -k)
 
   if [ "$result" != "\"received request\"" ];then 
     echo "Request to externally deployed service failed"
