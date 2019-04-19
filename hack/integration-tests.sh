@@ -37,7 +37,6 @@ test_externalservice() {
   kappy_deploy externalservice
 
   set -x
-  result=$(curl https://$(minikube ip)/ -H "Host: testecho.kappycitests.kontr.io" -k)
 
   kubectl get pods --namespace externalservice
   kubectl get services --namespace externalservice
@@ -46,6 +45,13 @@ test_externalservice() {
   kubectl get certificates --namespace externalservice
   sleep 5
 
+  resultinternal=$(curl -s http://127.0.0.1:8001/api/v1/namespaces/externalservice/services/http:echo-test:80/proxy/)
+  if [ "$resultinternal" != "\"received request\"" ];then 
+    echo "Request to internally deployed service failed"
+    return 1
+  fi
+
+  result=$(curl https://$(minikube ip)/ -H "Host: testecho.kappycitests.kontr.io" -k)
   if [ "$result" != "\"received request\"" ];then 
     echo "Request to externally deployed service failed"
     return 1
