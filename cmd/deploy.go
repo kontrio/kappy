@@ -16,30 +16,31 @@ import (
 )
 
 var DeployVersion string
+var stackDef *model.StackDefinition
 
 var deployCmd = &cobra.Command{
-	Use:   "deploy",
+	Use:   "deploy [stackname]",
 	Short: "Deploy an application or a set of applications to a Kubernetes cluster",
-	Args:  cobra.ArbitraryArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Debug("Loading config file")
-		config, err := pkg.LoadConfig(&KappyFile)
-
+	Args: func(cmd *cobra.Command, args []string) error {
+		var err error
+		config, err = pkg.LoadConfig(&KappyFile)
 		if err != nil {
-			log.Errorf("Failed to load config file %s", err)
-			os.Exit(1)
+			return fmt.Errorf("Failed to load config file %s", err)
 		}
 
-		deploymentStack := args[0]
+		if len(args) < 1 {
+			return fmt.Errorf("Requires [stackname] argument")
+		}
 
-		log.Infof("Deploying stack: %s", deploymentStack)
-		stackDef := config.GetStackByName(deploymentStack)
-
+		stackDef = config.GetStackByName(args[0])
 		if stackDef == nil {
-			log.Errorf("Stack not configured in .kappy.yaml: %s", deploymentStack)
-			os.Exit(1)
-			return
+			return fmt.Errorf("Stack '%s' is not defined in the .kappy configuration.", args[0])
 		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		deploymentStack := args[0]
+		log.Infof("Deploying stack: %s", deploymentStack)
 
 		client, errK8s := kubernetes.CreateClient(stackDef.ClusterName)
 
@@ -90,7 +91,7 @@ var deployCmd = &cobra.Command{
 				}
 			}
 
-			err = kubernetes.CreateUpdateService(client, &service, namespace)
+			err := kubernetes.CreateUpdateService(client, &service, namespace)
 			if err != nil {
 				log.Errorf("Failed to create service: '%s'", serviceName)
 				log.Errorf("Error: %s", err)

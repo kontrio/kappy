@@ -72,18 +72,18 @@ func getRolloutStatus(deployment *appsv1.Deployment) (string, bool, error) {
 	}
 
 	if status.UpdatedReplicas < *deployment.Spec.Replicas {
-		return fmt.Sprintf("Waiting for deployment %q rollout to finish: %d of %d new replicas have been updated...", name, status.UpdatedReplicas, *deployment.Spec.Replicas), false, nil
+		return fmt.Sprintf("%q: %d/%d replicas updated", name, status.UpdatedReplicas, *deployment.Spec.Replicas), false, nil
 	}
 
 	if status.Replicas > status.UpdatedReplicas {
-		return fmt.Sprintf("Waiting for deployment %q rollout to finish: waiting for %d old replicas to terminate...", name, status.Replicas, status.UpdatedReplicas), false, nil
+		return fmt.Sprintf("%q: %d/%d old replicas terminating", name, status.Replicas, status.UpdatedReplicas), false, nil
 	}
 
 	if status.AvailableReplicas < status.UpdatedReplicas {
-		return fmt.Sprintf("Waiting for deployment %q rollout to finish: %d of %d updated replicas are available...", name, status.AvailableReplicas, status.UpdatedReplicas), false, nil
+		return fmt.Sprintf("%q: %d/%d updated replicas are available", name, status.AvailableReplicas, status.UpdatedReplicas), false, nil
 	}
 
-	return fmt.Sprintf("deployment %q successfully rolled out", name), true, nil
+	return fmt.Sprintf("%q: %d/%d successfully rolled out", name, status.AvailableReplicas, status.UpdatedReplicas), true, nil
 }
 
 func getDeploymentCondition(deploymentStatus *appsv1.DeploymentStatus, conditionStatus appsv1.DeploymentConditionType) *appsv1.DeploymentCondition {

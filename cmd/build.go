@@ -15,18 +15,16 @@ import (
 )
 
 var ShouldPush bool = false
-var config *model.Config
 var serviceToBuild string
 
 var buildCmd = &cobra.Command{
 	Use:   "build [stackname] [servicename]",
 	Short: "Build an application or a set of applications and push to docker repositories",
-	Args: func(cmd *cobra.Command, args []string) error {
-		var err error
+	Args: func(cmd *cobra.Command, args []string) (err error) {
 		config, err = pkg.LoadConfig(&KappyFile)
 
 		if err != nil {
-			return err
+			return
 		}
 
 		if len(args) < 1 {
@@ -42,7 +40,7 @@ var buildCmd = &cobra.Command{
 			serviceToBuild = args[1]
 		}
 
-		return nil
+		return
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		stackName := args[0]

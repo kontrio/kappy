@@ -6,11 +6,13 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
+	"github.com/kontrio/kappy/pkg/model"
 	"github.com/spf13/cobra"
 )
 
 var Verbose bool
 var KappyFile string = ""
+var config *model.Config
 
 type VersionInfo struct {
 	Version string
