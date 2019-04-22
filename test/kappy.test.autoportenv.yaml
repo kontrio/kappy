@@ -1,0 +1,17 @@
+version: 1
+services:
+  echo-test:
+    service_ports:
+      - 80:4000
+    replicas: 1
+    internal: true
+    containers:
+      - name: default
+        image: jmalloc/echo-server
+        port: 4000
+
+stacks:
+  - name: autoportenv
+    k8s_cluster_name: minikube:minikube
+    services:
+      {}

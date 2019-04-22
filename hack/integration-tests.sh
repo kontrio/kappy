@@ -36,8 +36,6 @@ test_internalservice() {
 test_externalservice() {
   kappy_deploy externalservice
 
-  set -x
-
   kubectl get pods --namespace externalservice
   kubectl get services --namespace externalservice
   kubectl get endpoints echo-test --namespace externalservice
@@ -61,6 +59,20 @@ test_externalservice() {
   echo "PASSED"
 }
 
+test_autoportenv() {
+  kappy_deploy autoportenv
+  result=$(curl -s http://127.0.0.1:8001/api/v1/namespaces/autoportenv/services/http:echo-test:80/proxy/)
+
+  if [ "$result" != "\"received request\"" ];then 
+    echo "Request to service failed"
+    return 1
+  fi
+
+  kubectl delete namespace/autoportenv
+  echo "PASSED"
+}
+
 test_internalservice
 test_externalservice
+test_autoportenv
 

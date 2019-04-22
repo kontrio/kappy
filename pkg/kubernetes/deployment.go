@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/apex/log"
@@ -56,8 +57,14 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 		hasContainerConfig := containerConfig != nil
 		hasContainerConfigBuildSection := hasContainerConfig && containerConfig.Build != nil
 
+		explicitPort := false
+
 		if hasContainerConfig {
 			for key, value := range containerConfig.Env {
+				if key == "PORT" {
+					explicitPort = true
+				}
+
 				envVars = append(envVars, corev1.EnvVar{
 					Name:  key,
 					Value: value,
@@ -69,6 +76,13 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 
 		defaultContainerPort := corev1.ContainerPort{
 			ContainerPort: container.ExposePort,
+		}
+
+		if !explicitPort {
+			envVars = append(envVars, corev1.EnvVar{
+				Name:  "PORT",
+				Value: strconv.Itoa(int(container.ExposePort)),
+			})
 		}
 
 		imageName := canonicalImageName(container.Image, dockerRegistry, deployVersion, namespace, container.Build != nil, hasContainerConfigBuildSection)
