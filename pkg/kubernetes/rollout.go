@@ -25,36 +25,55 @@ func WatchDeployment(ctx context.Context, client *kubernetes.Clientset, namespac
 
 	defer watcher.Stop()
 
-	for event := range watcher.ResultChan() {
+	watchChan := watcher.ResultChan()
+	doneChan := ctx.Done()
 
-		switch event.Type {
-		case watch.Added, watch.Modified:
-			deployment := &appsv1.Deployment{}
-			err := scheme.Scheme.Convert(event.Object, deployment, nil)
+	log.Infof("Watching deployment rollout.. Use ctrl+c to cancel watch.")
 
+	for {
+		select {
+		case event := <-watchChan:
+			done, err := handleEvent(event)
 			if err != nil {
-				return fmt.Errorf("Failed to convert %T to %T: %v", event.Object, deployment, err)
+				return err
 			}
-
-			status, done, errStatus := getRolloutStatus(deployment)
-
-			if errStatus != nil {
-				return errStatus
-			}
-
-			log.Infof("%s", status)
 
 			if done {
 				return nil
 			}
-		case watch.Deleted:
-			return fmt.Errorf("deployment was deleted")
-		default:
-			return fmt.Errorf("Unexpected watch event for deployment from Kube API: %#v", event)
+		case <-doneChan:
+			return fmt.Errorf("Cancelled watch")
 		}
 	}
-
 	return nil
+}
+func handleEvent(event watch.Event) (bool, error) {
+	switch event.Type {
+	case watch.Added, watch.Modified:
+		deployment := &appsv1.Deployment{}
+		err := scheme.Scheme.Convert(event.Object, deployment, nil)
+
+		if err != nil {
+			return true, fmt.Errorf("Failed to convert %T to %T: %v", event.Object, deployment, err)
+		}
+
+		status, done, errStatus := getRolloutStatus(deployment)
+
+		if errStatus != nil {
+			return true, errStatus
+		}
+
+		log.Infof("%s", status)
+
+		if done {
+			return true, nil
+		}
+	case watch.Deleted:
+		return true, fmt.Errorf("deployment was deleted")
+	default:
+		return true, fmt.Errorf("Unexpected watch event for deployment from Kube API: %#v", event)
+	}
+	return false, nil
 }
 
 const _deploymentProgressing = "Progressing"

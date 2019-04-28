@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/joho/godotenv"
@@ -11,6 +12,7 @@ import (
 	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/kontrio/kappy/pkg/kubernetes"
 	"github.com/kontrio/kappy/pkg/model"
+	"github.com/kontrio/kappy/pkg/phase"
 	"github.com/spf13/cobra"
 	k8s "k8s.io/client-go/kubernetes"
 )
@@ -107,9 +109,21 @@ var deployCmd = &cobra.Command{
 				return
 			}
 
-			err = kubernetes.WatchDeployment(context.Background(), client, namespace, serviceName)
+			err = phase.NewPhase(context.Background()).
+				WithTimeout(1 * time.Minute).
+				CancelWithSignal(os.Interrupt).
+				Run(func(ctx context.Context) error {
+					return kubernetes.WatchDeployment(ctx, client, namespace, serviceName)
+				})
+
 			if err != nil {
 				log.Errorf("Failed to watch deployment.. '%s'", serviceName)
+				log.Errorf("Error: %s", err)
+			}
+
+			err = kubernetes.GetFailingPods(context.Background(), client, namespace, serviceName)
+			if err != nil {
+				log.Errorf("Failed to get pod statuses '%s'", serviceName)
 				log.Errorf("Error: %s", err)
 			}
 		}
