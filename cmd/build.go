@@ -85,7 +85,12 @@ var buildCmd = &cobra.Command{
 			}
 		}
 
-		log.Infof("Use this version with \"kappy deploy %s --version %s\" to deploy this build", stackName, version)
+		fileOverrideArgument := ""
+		if !kstrings.IsEmpty(&KappyFile) {
+			fileOverrideArgument = fmt.Sprintf(" --file %s", KappyFile)
+		}
+
+		log.Infof("Use this version with \"kappy deploy %s --version %s%s\" to deploy this build", stackName, version, fileOverrideArgument)
 		log.Infof("Versioned: '%s'", version)
 	},
 }
