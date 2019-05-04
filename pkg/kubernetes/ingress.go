@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace string) netv1beta1.Ingress {
+func CreateIngressResource(serviceConfig *model.ServiceConfig, serviceName, namespace string) (*netv1beta1.Ingress, error) {
 
 	rules := []netv1beta1.IngressRule{}
 	defaultPath := "/"
@@ -37,7 +37,7 @@ func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace st
 		})
 	}
 
-	return netv1beta1.Ingress{
+	return &netv1beta1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Ingress",
 		},
@@ -62,15 +62,15 @@ func createIngress(serviceConfig *model.ServiceConfig, serviceName, namespace st
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func CreateUpdateIngress(client *kubernetes.Clientset, serviceConfig *model.ServiceConfig, serviceName, namespace string) error {
-	resource := createIngress(serviceConfig, serviceName, namespace)
+	resource, _ := CreateIngressResource(serviceConfig, serviceName, namespace)
 
 	upsertCommand := UpsertCommand{
 		Create: func() (err error) {
-			_, err = client.ExtensionsV1beta1().Ingresses(namespace).Create(&resource)
+			_, err = client.ExtensionsV1beta1().Ingresses(namespace).Create(resource)
 
 			if err == nil {
 				log.Infof("Successfully created ingress %s in namespace %s", serviceName, namespace)
@@ -78,7 +78,7 @@ func CreateUpdateIngress(client *kubernetes.Clientset, serviceConfig *model.Serv
 			return
 		},
 		Update: func() (err error) {
-			_, err = client.ExtensionsV1beta1().Ingresses(namespace).Update(&resource)
+			_, err = client.ExtensionsV1beta1().Ingresses(namespace).Update(resource)
 
 			if err == nil {
 				log.Infof("Successfully updated ingress %s in namespace %s", serviceName, namespace)

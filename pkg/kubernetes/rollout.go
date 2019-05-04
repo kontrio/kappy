@@ -28,8 +28,6 @@ func WatchDeployment(ctx context.Context, client *kubernetes.Clientset, namespac
 	watchChan := watcher.ResultChan()
 	doneChan := ctx.Done()
 
-	log.Infof("Watching deployment rollout.. Use ctrl+c to cancel watch.")
-
 	for {
 		select {
 		case event := <-watchChan:

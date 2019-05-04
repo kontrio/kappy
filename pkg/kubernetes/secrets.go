@@ -8,7 +8,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func CreateSecret(client *kubernetes.Clientset, secretRef, namespace string, secrets map[string]string, labels map[string]string) error {
+func CreateSecretResource(secretRef, namespace string, secrets map[string]string, labels map[string]string) (*corev1.Secret, error) {
 	// Alias to default only for logging purposes.
 	ns := namespace
 	if len(namespace) == 0 {
@@ -19,22 +19,22 @@ func CreateSecret(client *kubernetes.Clientset, secretRef, namespace string, sec
 
 	encodedSecrets := convertToBytes(secrets)
 
-	secret := corev1.Secret{
+	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      secretRef,
 			Namespace: namespace,
 			Labels:    labels,
 		},
 		Data: encodedSecrets,
-	}
+	}, nil
 
-	return doCreateSecret(client, secretRef, namespace, secret)
 }
 
-func doCreateSecret(client *kubernetes.Clientset, secretRef, namespace string, resource corev1.Secret) error {
+func CreateSecret(client *kubernetes.Clientset, secretRef, namespace string, secrets map[string]string, labels map[string]string) error {
+	resource, _ := CreateSecretResource(secretRef, namespace, secrets, labels)
 	upsertCmd := UpsertCommand{
 		Create: func() (err error) {
-			_, err = client.CoreV1().Secrets(namespace).Create(&resource)
+			_, err = client.CoreV1().Secrets(namespace).Create(resource)
 
 			if err == nil {
 				log.Infof("Successfully created secret %s in namespace %s", secretRef, namespace)
@@ -42,7 +42,7 @@ func doCreateSecret(client *kubernetes.Clientset, secretRef, namespace string, r
 			return
 		},
 		Update: func() (err error) {
-			_, err = client.CoreV1().Secrets(namespace).Update(&resource)
+			_, err = client.CoreV1().Secrets(namespace).Update(resource)
 
 			if err == nil {
 				log.Infof("Successfully updated secret %s in namespace %s", secretRef, namespace)

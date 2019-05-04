@@ -39,7 +39,7 @@ func canonicalImageName(imageName string, dockerRegistry string, deployVersion s
 	return fmt.Sprintf("%s/%s", dockerRegistry, versionedImage)
 }
 
-func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) appsv1.Deployment {
+func CreateDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) (*appsv1.Deployment, error) {
 	serviceName := serviceDef.Name
 
 	if len(namespace) == 0 {
@@ -143,15 +143,15 @@ func createDeploymentResource(serviceDef *model.ServiceDefinition, serviceConfig
 		Spec: deploymentSpec,
 	}
 
-	return deployment
+	return &deployment, nil
 }
 
 func UpsertDeployment(client *kubernetes.Clientset, serviceDefinition *model.ServiceDefinition, serviceConfig *model.ServiceConfig, namespace, deployVersion, dockerRegistry string) error {
-	deployment := createDeploymentResource(serviceDefinition, serviceConfig, namespace, deployVersion, dockerRegistry)
+	deployment, _ := CreateDeploymentResource(serviceDefinition, serviceConfig, namespace, deployVersion, dockerRegistry)
 
 	upsert := UpsertCommand{
 		Create: func() (err error) {
-			_, err = client.AppsV1().Deployments(namespace).Create(&deployment)
+			_, err = client.AppsV1().Deployments(namespace).Create(deployment)
 			if err == nil {
 				log.Infof("Created deployment %s", serviceDefinition.Name)
 			}
@@ -159,7 +159,7 @@ func UpsertDeployment(client *kubernetes.Clientset, serviceDefinition *model.Ser
 			return
 		},
 		Update: func() (err error) {
-			_, err = client.AppsV1().Deployments(namespace).Update(&deployment)
+			_, err = client.AppsV1().Deployments(namespace).Update(deployment)
 			if err == nil {
 				log.Infof("Updated deployment %s", serviceDefinition.Name)
 			}

@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func createService(serviceDefinition *model.ServiceDefinition, namespace string) (*corev1.Service, error) {
+func CreateServiceResource(serviceDefinition *model.ServiceDefinition, namespace string) (*corev1.Service, error) {
 	serviceSelector := make(map[string]string)
 	serviceSelector["name"] = serviceDefinition.Name
 
@@ -64,7 +64,7 @@ func createService(serviceDefinition *model.ServiceDefinition, namespace string)
 }
 
 func CreateUpdateService(client *kubernetes.Clientset, serviceDefinition *model.ServiceDefinition, namespace string) error {
-	service, errValid := createService(serviceDefinition, namespace)
+	service, errValid := CreateServiceResource(serviceDefinition, namespace)
 
 	if errValid != nil {
 		return errValid

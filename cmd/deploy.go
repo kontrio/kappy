@@ -109,7 +109,7 @@ var deployCmd = &cobra.Command{
 				return
 			}
 
-			log.Infof("Watching deployment status - ctrl+c to cancel watch and continue.."
+			log.Infof("Watching deployment status - ctrl+c to cancel watch and continue..")
 			err = phase.NewPhase(context.Background()).
 				WithTimeout(1 * time.Minute).
 				CancelWithSignal(os.Interrupt).
