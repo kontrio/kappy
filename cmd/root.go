@@ -37,9 +37,11 @@ func Init(versionInfo *VersionInfo) {
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(generateCmd)
 
 	initBuildCmd()
 	initDeployCmd()
+	initGenerateCmd()
 	initVersionCmd(versionInfo)
 }
 

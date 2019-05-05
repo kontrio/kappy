@@ -8,7 +8,6 @@ import (
 
 	"github.com/apex/log"
 	"github.com/joho/godotenv"
-	"github.com/kontrio/kappy/pkg"
 	"github.com/kontrio/kappy/pkg/kstrings"
 	"github.com/kontrio/kappy/pkg/kubernetes"
 	"github.com/kontrio/kappy/pkg/model"
@@ -18,28 +17,11 @@ import (
 )
 
 var DeployVersion string
-var stackDef *model.StackDefinition
 
 var deployCmd = &cobra.Command{
 	Use:   "deploy [stackname]",
 	Short: "Deploy an application or a set of applications to a Kubernetes cluster",
-	Args: func(cmd *cobra.Command, args []string) error {
-		var err error
-		config, err = pkg.LoadConfig(&KappyFile)
-		if err != nil {
-			return fmt.Errorf("Failed to load config file %s", err)
-		}
-
-		if len(args) < 1 {
-			return fmt.Errorf("Requires [stackname] argument")
-		}
-
-		stackDef = config.GetStackByName(args[0])
-		if stackDef == nil {
-			return fmt.Errorf("Stack '%s' is not defined in the .kappy configuration.", args[0])
-		}
-		return nil
-	},
+	Args:  ArgsLoadConfigAndStackName,
 	Run: func(cmd *cobra.Command, args []string) {
 		deploymentStack := args[0]
 		log.Infof("Deploying stack: %s", deploymentStack)
